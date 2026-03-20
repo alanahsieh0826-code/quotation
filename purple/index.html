@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>活力創意報價系統 - 自由風格版</title>
+    <style>
+        /* 活潑風格配色中心 */
+        :root { 
+            --primary: #6366f1;       /* 亮紫色/靛藍 */
+            --accent: #f59e0b;        /* 活力橘黃 */
+            --bg-soft: #fdf2f2;       /* 極淺粉橘背景 */
+            --text-main: #1e293b;     /* 深藍灰文字 */
+            --text-light: #64748b;    /* 輔助灰文字 */
+            --border: #e2e8f0;        /* 邊框色 */
+        }
+        
+        * { box-sizing: border-box; font-family: "Inter", "Quicksand", "PingFang TC", sans-serif; }
+        
+        /* 網頁背景改為柔和漸層 */
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 40px 20px; 
+            display: flex; 
+            justify-content: center; 
+            color: var(--text-main); 
+        }
+
+        .a4-page { 
+            background: white; width: 210mm; min-height: 297mm; padding: 40px 60px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
+            position: relative; display: flex; flex-direction: column;
+            border-radius: 12px; /* 增加頁面圓角感 */
+        }
+
+        /* Header 活力調整 */
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 35px; }
+        .brand-container { display: flex; gap: 20px; align-items: center; }
+        
+        .logo-box {
+            width: 85px; height: 85px; border: 2px dashed var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden; background: #f5f3ff;
+            border-radius: 16px; /* 圓角 Logo 框 */
+            transition: 0.3s;
+        }
+        .logo-box:hover { border-style: solid; background: white; }
+        .logo-box img { max-width: 90%; max-height: 90%; object-fit: contain; }
+        .logo-placeholder { font-size: 10px; color: var(--primary); text-align: center; cursor: pointer; font-weight: 700; }
+        #logo-file { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+        .brand-zone { border-left: 5px solid var(--accent); padding-left: 15px; }
+        .company-name { font-size: 22px; font-weight: 900; border: none; outline: none; width: 350px; background: transparent; color: var(--primary); }
+        .company-sub { font-size: 14px; color: var(--text-light); margin-top: 8px; line-height: 1.3; }
+        
+        .label-editable { border: none; outline: none; background: transparent; font-weight: 700; color: var(--primary); width: 85px; font-size: 14px; }
+        .value-editable { border: none; outline: none; background: transparent; color: var(--text-light); width: 220px; font-size: 14px; }
+
+        .doc-meta { text-align: right; }
+        .doc-label { font-size: 12px; font-weight: 900; color: var(--accent); letter-spacing: 3px; margin-bottom: 5px; }
+        .doc-no-input { border: none; outline: none; text-align: right; font-size: 18px; font-weight: 300; width: 200px; color: var(--text-light); }
+
+        /* 專案名稱樣式優化 */
+        .project-wrap { margin-bottom: 30px; background: var(--bg-soft); padding: 15px 20px; border-radius: 10px; }
+        .tag { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-bottom: 5px; display: block; }
+        .project-input { border: none; font-size: 18px; font-weight: 800; width: 100%; outline: none; background: transparent; color: var(--text-main); }
+
+        .info-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; margin-bottom: 30px; }
+        .info-row { display: grid; grid-template-columns: 90px 1fr; border-bottom: 1px solid #f1f5f9; padding: 8px 0; align-items: center; }
+        .info-input { border: none; outline: none; font-size: 14px; font-weight: 600; background: transparent; width: 100%; }
+
+        /* 表格風格：清新簡潔 */
+        .table-main { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .table-main th { text-align: center; padding: 12px 10px; font-size: 13px; color: white; background: var(--primary); }
+        .table-main th:first-child { border-radius: 8px 0 0 0; }
+        .table-main th:last-child { border-radius: 0 8px 0 0; }
+        .table-main td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 14px; }
+
+        .col-id { width: 40px; color: var(--primary); font-weight: 800; }
+        .col-qty { width: 70px; text-align: center; } 
+        .col-price { width: 120px; text-align: right; }
+        .col-sum { width: 130px; text-align: right; font-weight: 700; color: var(--primary); }
+
+        .field-input { border: none; outline: none; text-align: inherit; font-size: 14px; background: transparent; width: 100%; }
+        .auto-expand { width: 100%; border: none; outline: none; resize: none; font-size: 14px; line-height: 1.0; background: transparent; overflow: hidden; }
+
+        /* 合計對齊區域 */
+        .footer-layout { display: flex; flex-direction: column; gap: 20px; }
+        .summary-box { align-self: flex-end; width: 150px; text-align: right; padding-right: 10px; }
+        .sum-row.grand { border-top: 3px solid var(--accent); padding-top: 12px; display: flex; flex-direction: column; align-items: flex-end; }
+        .grand-label { font-size: 12px; font-weight: 900; color: var(--accent); margin-bottom: 4px; }
+        .grand-price { font-size: 18px; font-weight: 900; color: var(--primary); }
+
+        /* 卡片設計：微陰影圓角 */
+        .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .card-title { font-size: 14px; font-weight: 800; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .card-title::before { content: "✨"; font-size: 12px; }
+        
+        .pay-amt-input { width: 130px; text-align: right; color: var(--primary); font-weight: 700; border: none; font-size: 14px; background: transparent; }
+
+        .signature-zone { margin-top: 30px; align-self: flex-end; text-align: center; }
+        .signature-line { width: 200px; border-bottom: 2px solid var(--primary); margin-bottom: 8px; height: 40px; }
+        .signature-label { font-size: 12px; font-weight: 800; color: var(--text-light); }
+
+        /* 工具列活潑化 */
+        .toolbar { position: fixed; left: 30px; top: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
+        button { border: none; border-radius: 50px; padding: 10px 20px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-dark { background: var(--text-main); }
+        .btn-blue { background: var(--primary); }
+        .btn-del { background: #fee2e2; color: #ef4444; padding: 4px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; }
+        .btn-warn { background: var(--accent); margin-top: 20px; }
+        button:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); opacity: 0.9; }
+
+        @media print {
+            .toolbar, .btn-del { display: none !important; }
+            body { background: white; padding: 0; }
+            .a4-page { box-shadow: none; width: 100%; margin: 0; padding: 5px 30px; }
+            .pay-pct-input { background: transparent !important; }
+        }
+    </style>
+</head>
+<body oninput="saveAllData()">
+
+<div class="toolbar">
+    <button class="btn-blue" onclick="addRow()">🚀 新增報價項目</button>
+    <button class="btn-dark" onclick="addPayRow()">💰 新增付款期數</button>
+    <button class="btn-blue" style="background: #10b981;" onclick="window.print()">🖨️ 生成 PDF 報價單</button>
+    <button class="btn-warn" onclick="clearData()">🧹 重置所有內容</button>
+</div>
+
+<div class="a4-page">
+    <div class="header">
+        <div class="brand-container">
+            <div class="logo-box">
+                <img id="logo-preview" src="" style="display:none;">
+                <div class="logo-placeholder" id="logo-text">LOGO<br>上傳</div>
+                <input type="file" id="logo-file" accept="image/*" onchange="handleLogo(this)">
+            </div>
+            <div class="brand-zone">
+                <input type="text" class="company-name save-field" id="my_co_name" value="您的創意工作室">
+                <div class="company-sub">
+                    <div><input type="text" class="save-field label-editable" id="L1" value="統一編號："><input type="text" class="save-field value-editable" id="V1" value="88888888"></div>
+                    <div><input type="text" class="save-field label-editable" id="L2" value="官方網站："><input type="text" class="save-field value-editable" id="V2" value="www.yourstudio.com"></div>
+                    <div><input type="text" class="save-field label-editable" id="L3" value="聯絡電話："><input type="text" class="save-field value-editable" id="V3" value="0900-000-000"></div>
+                </div>
+            </div>
+        </div>
+        <div class="doc-meta">
+            <div class="doc-label">OFFICIAL QUOTATION</div>
+            <input type="text" class="doc-no-input save-field" id="doc_no" placeholder="單號自動生成">
+        </div>
+    </div>
+
+    <div class="project-wrap">
+        <span class="tag">PROJECT NAME</span>
+        <input type="text" class="project-input save-field" id="proj_name" placeholder="請輸入令人興奮的專案標題！">
+    </div>
+
+    <div class="info-grid">
+        <div class="info-col">
+            <div class="info-row">
+                <input type="text" id="cust_L1" class="label-editable save-field" value="客戶名稱">
+                <input type="text" id="cust_V1" class="info-input save-field" placeholder="合作夥伴名稱...">
+            </div>
+            <div class="info-row">
+                <input type="text" id="cust_L2" class="label-editable save-field" value="統一編號">
+                <input type="text" id="cust_V2" class="info-input save-field">
+            </div>
+            <div class="info-row">
+                <input type="text" id="cust_L3" class="label-editable save-field" value="聯絡窗口">
+                <input type="text" id="cust_V3" class="info-input save-field">
+            </div>
+        </div>
+        <div class="info-col">
+            <div class="info-row">
+                <input type="text" id="cust_L4" class="label-editable save-field" value="提案日期">
+                <input type="date" id="doc_date" class="info-input save-field">
+            </div>
+            <div class="info-row">
+                <input type="text" id="cust_L5" class="label-editable save-field" value="報價效期">
+                <input type="text" id="doc_valid" class="info-input save-field" value="14 天">
+            </div>
+            <div class="info-row">
+                <input type="text" id="cust_L6" class="label-editable save-field" value="聯絡方式">
+                <input type="text" id="cust_V4" class="info-input save-field">
+            </div>
+        </div>
+    </div>
+
+    <table class="table-main">
+        <thead>
+            <tr>
+                <th class="col-id">#</th>
+                <th class="col-desc">服務項目描述</th>
+                <th class="col-qty">數量</th>
+                <th class="col-price">單價</th>
+                <th class="col-sum">小計</th>
+                <th style="width: 20px;" class="toolbar"></th>
+            </tr>
+        </thead>
+        <tbody id="itemBody"></tbody>
+    </table>
+
+    <div class="footer-layout">
+        <div class="summary-box">
+            <div class="sum-row grand">
+                <span class="grand-label">GRAND TOTAL</span>
+                <span class="grand-price" id="res-grand">$ 0</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">付款時程拆分</div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tbody id="payBody"></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-title">溫馨小叮嚀</div>
+            <textarea id="memo" class="auto-expand save-field" oninput="resize(this)">1. 期待這次的合作！如有任何問題歡迎隨時聯繫。
+2. 報價包含兩次細微調整，超出範圍將另行計費。</textarea>
+        </div>
+
+        <div class="card">
+            <div class="card-title">如何支付款項</div>
+            <textarea id="bankInfo" class="auto-expand save-field" oninput="resize(this)">銀行代碼：(008) 華南銀行
+戶名：您的創意工作室
+帳號：123-45-67890-1</textarea>
+        </div>
+
+        <div class="signature-zone">
+            <div class="signature-line"></div>
+            <div class="signature-label">PARTNER SIGNATURE</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        if (!loadAllData()) {
+            addRow();
+            addPayRow("第一階段：訂金 (50%)", "0");
+            document.getElementById('doc_date').valueAsDate = new Date();
+            generateDocNo(); 
+        }
+        setTimeout(() => { document.querySelectorAll('textarea').forEach(el => resize(el)); }, 100);
+        calc();
+    }
+
+    function generateDocNo() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        document.getElementById('doc_no').value = `INV-${yyyy}${mm}${dd}-01`;
+    }
+
+    function handleLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('logo-preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                document.getElementById('logo-text').style.display = 'none';
+                saveAllData();
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function formatNum(n) { return Number(n).toLocaleString('en-US'); }
+    function toMoney(el) { 
+        let val = el.value.replace(/,/g, ''); 
+        if(!isNaN(val) && val !== "") el.value = formatNum(val); 
+        saveAllData();
+    }
+    function toNum(el) { el.value = el.value.replace(/,/g, ''); }
+    function resize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+    function addRow(desc = "", qty = 1, price = 0) {
+        const tbody = document.getElementById('itemBody');
+        const num = (tbody.rows.length + 1).toString().padStart(2, '0');
+        const row = `<tr>
+            <td class="col-id">${num}</td>
+            <td class="col-desc"><textarea class="auto-expand item-desc" rows="1" oninput="resize(this);saveAllData()">${desc}</textarea></td>
+            <td class="col-qty"><input type="number" class="field-input qty-input" value="${qty}" oninput="calc();saveAllData()"></td>
+            <td class="col-price"><input type="text" class="field-input" value="${formatNum(price)}" onfocus="toNum(this)" onblur="toMoney(this)" oninput="calc()"></td>
+            <td class="col-sum sub-val">${formatNum(qty * price)}</td>
+            <td class="toolbar"><button class="btn-del" onclick="this.closest('tr').remove();calc();saveAllData();">✕</button></td>
+        </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+        resize(tbody.lastElementChild.querySelector('textarea'));
+    }
+
+    function addPayRow(desc = "", amt = "0") {
+        const row = `<tr>
+            <td><input type="text" class="field-input pay-desc" value="${desc}" oninput="saveAllData()"></td>
+            <td style="text-align: right;">
+                <span style="font-size: 12px; color: var(--text-light);">$</span>
+                <input type="text" class="pay-amt-input" value="${amt}" onfocus="toNum(this)" onblur="toMoney(this)" oninput="saveAllData()">
+            </td>
+            <td class="toolbar" style="text-align: right; width: 30px;"><button class="btn-del" onclick="this.closest('tr').remove();saveAllData();">✕</button></td>
+        </tr>`;
+        document.getElementById('payBody').insertAdjacentHTML('beforeend', row);
+    }
+
+    function calc() {
+        let total = 0;
+        document.querySelectorAll('#itemBody tr').forEach((row, i) => {
+            row.cells[0].innerText = (i + 1).toString().padStart(2, '0');
+            const q = row.querySelector('.qty-input').value || 0;
+            const p = row.querySelector('input[onblur="toMoney(this)"]').value.replace(/,/g, '') || 0;
+            const sub = q * p;
+            row.querySelector('.sub-val').innerText = formatNum(sub);
+            total += sub;
+        });
+        document.getElementById('res-grand').innerText = '$ ' + formatNum(total);
+    }
+
+    function saveAllData() {
+        const data = { fields: {}, items: [], payments: [], logo: "" };
+        document.querySelectorAll('.save-field').forEach(el => data.fields[el.id] = el.value);
+        document.querySelectorAll('#itemBody tr').forEach(row => {
+            data.items.push({ desc: row.querySelector('.item-desc').value, qty: row.querySelector('.qty-input').value, price: row.querySelector('input[onblur="toMoney(this)"]').value.replace(/,/g, '') });
+        });
+        document.querySelectorAll('#payBody tr').forEach(row => {
+            data.payments.push({ desc: row.querySelector('.pay-desc').value, amt: row.querySelector('.pay-amt-input').value });
+        });
+        data.logo = document.getElementById('logo-preview').src;
+        localStorage.setItem('quotationData_vVivid', JSON.stringify(data));
+    }
+
+    function loadAllData() {
+        const saved = localStorage.getItem('quotationData_vVivid');
+        if (!saved) return false;
+        const data = JSON.parse(saved);
+        for (let id in data.fields) { const el = document.getElementById(id); if (el) el.value = data.fields[id]; }
+        if (data.logo && data.logo.startsWith('data:image')) {
+            const preview = document.getElementById('logo-preview');
+            preview.src = data.logo;
+            preview.style.display = 'block';
+            document.getElementById('logo-text').style.display = 'none';
+        }
+        document.getElementById('itemBody').innerHTML = '';
+        data.items.forEach(item => addRow(item.desc, item.qty, item.price));
+        document.getElementById('payBody').innerHTML = '';
+        data.payments.forEach(pay => addPayRow(pay.desc, pay.amt));
+        return true;
+    }
+
+    function clearData() {
+        if (confirm("確定要重置嗎？這將會清空所有內容。")) {
+            localStorage.removeItem('quotationData_vVivid');
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
