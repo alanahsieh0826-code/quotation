@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>微型企業帳務系統_手動備份版</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        /* 醒目的備份提醒區塊 */
+        .backup-alert { 
+            background-color: #fff3e0; 
+            border-left: 5px solid #ff9800; 
+            color: #e65100; 
+            padding: 15px; 
+            margin-bottom: 20px; 
+            border-radius: 4px; 
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .backup-alert i { margin-right: 10px; font-size: 20px; }
+
+        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; overflow-x: auto; gap: 5px; }
+        .tab { padding: 12px 25px; cursor: pointer; border: none; background: #eee; border-radius: 8px 8px 0 0; font-weight: bold; color: #666; }
+        .tab.active { background: #1a73e8; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .section { padding: 20px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { background-color: #1a73e8; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-excel { background-color: #2e7d32; margin-bottom: 10px; }
+        .btn-del { background-color: #ff5252; padding: 5px 10px; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f8f9fa; }
+        
+        .profit-card { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 20px 0; }
+        .card { padding: 20px; border-radius: 8px; text-align: center; color: white; }
+        .bg-income { background-color: #4caf50; } .bg-cost { background-color: #795548; } 
+        .bg-exp { background-color: #ff9800; } .bg-net { background-color: #2196f3; }
+
+        @media print {
+            @page { size: A4; margin: 15mm; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border: none; width: 100%; max-width: none; padding: 0; margin: 0; }
+            .tabs, .section:not(#statementPrintSection), h2, button, .system-tools, input, .backup-alert { display: none !important; }
+            #statementPrintSection { display: block !important; border: none !important; padding: 0 !important; }
+            #stContent table { width: 100%; border: 1px solid #000; }
+            #stContent th, #stContent td { border: 1px solid #000; padding: 8px; color: black; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🏢 企業全方位管理系統 (V12.2)</h2>
+
+    <div class="backup-alert">
+        <span>⚠️ 系統提醒：瀏覽器快取並非永久儲存，請務必定期使用下方「全系統備份」功能下載資料，以免數據遺失。</span>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="openTab(event, 'tab-purchase')">📦 進貨</button>
+        <button class="tab" onclick="openTab(event, 'tab-sales')">💰 銷售</button>
+        <button class="tab" onclick="openTab(event, 'tab-expense')">💸 支出</button>
+        <button class="tab" onclick="openTab(event, 'tab-report')">📊 庫存</button>
+        <button class="tab" onclick="openTab(event, 'tab-profit')">📈 損益分析</button>
+        <button class="tab" onclick="openTab(event, 'tab-statement')">🧾 對帳單</button>
+    </div>
+
+    <div id="tab-profit" class="tab-content">
+        <div class="section">
+            <h3>本月損益數據數據</h3>
+            月份：<input type="month" id="profitMonth" onchange="calculateProfit()" style="width: 200px;">
+            <div class="profit-card">
+                <div class="card bg-income"><h4>總營收</h4><p id="p-income">$0</p></div>
+                <div class="card bg-cost"><h4>銷貨成本</h4><p id="p-cost">$0</p></div>
+                <div class="card bg-exp"><h4>營運支出</h4><p id="p-exp">$0</p></div>
+                <div class="card bg-net"><h4>本月淨利</h4><p id="p-net">$0</p></div>
+            </div>
+            <p style="color: #666; font-size: 14px;">* 損益計算包含當月所有銷售收入扣除產品成本與營運支出。</p>
+        </div>
+    </div>
+
+    <div id="tab-purchase" class="tab-content active">
+        <div class="section">
+            <h3>新增進貨</h3>
+            <div class="form-group"><label>日期</label><input type="date" id="buyDate" class="default-date"></div>
+            <div class="form-group"><label>產品名稱</label><input type="text" id="buyName"></div>
+            <div class="form-group"><label>數量</label><input type="number" id="buyQty" value="1"></div>
+            <div class="form-group"><label>單價</label><input type="number" id="buyPrice" value="0"></div>
+            <button onclick="handlePurchase()">確認進貨</button>
+        </div>
+        <div class="section">
+            <h3>進貨明細</h3>
+            <input type="month" id="filterBuyMonth" onchange="refreshPurchaseTable()" style="width: 180px;">
+            <button class="btn-excel" onclick="exportToExcel('purchaseTable', '進貨明細')">匯出 Excel</button>
+            <table id="purchaseTable"><thead><tr><th>日期</th><th>品項</th><th>數量</th><th>單價</th><th>小計</th><th>操作</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <div id="tab-sales" class="tab-content">
+        <div class="section">
+            <h3>新增銷售</h3>
+            <div class="form-group"><label>日期</label><input type="date" id="sellDate" class="default-date"></div>
+            <div class="form-group"><label>產品</label><select id="sellSelect"></select></div>
+            <div class="form-group"><label>客戶名稱</label><input type="text" id="custName"></div>
+            <div class="form-group"><label>數量</label><input type="number" id="sellQty" value="1"></div>
+            <div class="form-group"><label>售價</label><input type="number" id="sellPrice" value="0"></div>
+            <button onclick="handleSale()" style="background:#e91e63">確認銷售</button>
+        </div>
+        <div class="section">
+            <h3>銷售明細</h3>
+            <input type="month" id="filterSellMonth" onchange="refreshSalesTable()" style="width: 180px;">
+            <button class="btn-excel" onclick="exportToExcel('salesHistoryTable', '銷售明細')">匯出 Excel</button>
+            <table id="salesHistoryTable"><thead><tr><th>日期</th><th>客戶</th><th>品項</th><th>數量</th><th>單價</th><th>小計</th><th>操作</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <div id="tab-expense" class="tab-content">
+        <div class="section">
+            <h3>記錄營運支出</h3>
+            <div class="form-group"><label>日期</label><input type="date" id="expDate" class="default-date"></div>
+            <div class="form-group"><label>金額</label><input type="number" id="expAmount" value="0"></div>
+            <div class="form-group"><label>備註</label><input type="text" id="expMemo" placeholder="例如：水電、租金"></div>
+            <button onclick="handleExpense()" style="background:#ff9800">儲存紀錄</button>
+        </div>
+        <div class="section">
+            <h3>支出明細</h3>
+            <input type="month" id="filterExpMonth" onchange="refreshExpenseTable()" style="width: 180px;">
+            <button class="btn-excel" onclick="exportToExcel('expenseTable', '支出明細')">匯出 Excel</button>
+            <table id="expenseTable"><thead><tr><th>日期</th><th>類別</th><th>金額</th><th>備註</th><th>操作</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <div id="tab-report" class="tab-content">
+        <div class="section">
+            <h3>庫存狀態概覽</h3>
+            <button class="btn-excel" onclick="exportToExcel('inventoryTable', '庫存報表')">匯出庫存 Excel</button>
+            <table id="inventoryTable"><thead><tr><th>產品名稱</th><th>庫存數量</th><th>平均成本</th><th>庫存總值</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <div id="tab-statement" class="tab-content">
+        <div class="section">
+            <h3>產出對帳單</h3>
+            <div class="form-group"><input type="text" id="myCompName" placeholder="您的公司名稱"></div>
+            <div class="form-group"><input type="month" id="stateMonth"></div>
+            <div class="form-group"><input type="text" id="stateCust" placeholder="客戶名稱"></div>
+            <button onclick="generateStatement()">產生對帳單預覽</button>
+        </div>
+        <div id="statementPrintSection" class="section" style="display:none;">
+            <div id="stContent"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="window.print()">🖨️ 確認列印 PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section system-tools" style="background: #f1f3f4; border: 2px solid #ff9800;">
+        <h4 style="color: #e65100;">💾 全系統備份與恢復工具</h4>
+        <button class="btn-tool" onclick="exportFullSystem()" style="background: #ff9800;">📤 立即匯出備份檔 (.json)</button>
+        <button class="btn-tool" onclick="document.getElementById('fullImportFile').click()">📥 匯入歷史資料</button>
+        <input type="file" id="fullImportFile" style="display:none" onchange="importFullSystem(event)">
+    </div>
+</div>
+
+<script>
+    let db;
+    const request = indexedDB.open("ERP_V12_DB", 1);
+
+    request.onsuccess = (e) => { db = e.target.result; init(); };
+    request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        ["products", "purchases", "sales", "expenses"].forEach(s => {
+            if(!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: s === "products" ? "name" : "id", autoIncrement: s !== "products" });
+        });
+    };
+
+    function init() {
+        const today = new Date().toISOString().split('T')[0];
+        const m = today.substring(0, 7);
+        document.querySelectorAll('.default-date').forEach(el => el.value = today);
+        ['filterBuyMonth', 'filterSellMonth', 'filterExpMonth', 'stateMonth', 'profitMonth'].forEach(id => document.getElementById(id).value = m);
+        refreshUI();
+    }
+
+    function openTab(evt, tabId) {
+        document.querySelectorAll(".tab-content, .tab").forEach(el => el.classList.remove("active"));
+        document.getElementById(tabId).classList.add("active");
+        evt.currentTarget.classList.add("active");
+        if(tabId === 'tab-profit') calculateProfit();
+        refreshUI();
+    }
+
+    function fmtInt(n) { return Math.round(n || 0).toLocaleString(); }
+    function fmtDec(n) { return (n || 0).toFixed(2); }
+
+    function getMonthlyStats(m) {
+        return new Promise(resolve => {
+            let income = 0, cogs = 0, exp = 0;
+            const tx = db.transaction(["sales", "expenses"], "readonly");
+            tx.objectStore("sales").getAll().onsuccess = (e) => {
+                e.target.result.forEach(s => { if(s.date.startsWith(m)) { income += s.qty * s.price; cogs += s.qty * (s.costAtSale || 0); }});
+                tx.objectStore("expenses").getAll().onsuccess = (e) => {
+                    e.target.result.forEach(x => { if(x.date.startsWith(m)) exp += x.amount; });
+                    resolve({ income, cogs, exp });
+                };
+            };
+        });
+    }
+
+    function handlePurchase() {
+        const name = document.getElementById('buyName').value, qty = parseFloat(document.getElementById('buyQty').value), price = parseFloat(document.getElementById('buyPrice').value), date = document.getElementById('buyDate').value;
+        if(!name || isNaN(qty)) return;
+        const tx = db.transaction(["products", "purchases"], "readwrite");
+        tx.objectStore("products").get(name).onsuccess = (e) => {
+            let p = e.target.result || { name, qty: 0, avgCost: 0 };
+            p.avgCost = ((p.qty * p.avgCost) + (qty * price)) / (p.qty + qty);
+            p.qty += qty;
+            tx.objectStore("products").put(p);
+            tx.objectStore("purchases").add({ name, qty, price, date });
+            tx.oncomplete = () => { alert("進貨成功"); refreshUI(); };
+        };
+    }
+
+    function handleSale() {
+        const name = document.getElementById('sellSelect').value, qty = parseFloat(document.getElementById('sellQty').value), price = parseFloat(document.getElementById('sellPrice').value), cust = document.getElementById('custName').value, date = document.getElementById('sellDate').value;
+        const tx = db.transaction(["products", "sales"], "readwrite");
+        tx.objectStore("products").get(name).onsuccess = (e) => {
+            let p = e.target.result;
+            if(!p || p.qty < qty) return alert("庫存不足");
+            const costAtSale = p.avgCost;
+            p.qty -= qty;
+            tx.objectStore("products").put(p);
+            tx.objectStore("sales").add({ product: name, qty, price, costAtSale, customer: cust, date });
+            tx.oncomplete = () => { alert("銷售成功"); refreshUI(); };
+        };
+    }
+
+    function handleExpense() {
+        const amount = parseFloat(document.getElementById('expAmount').value);
+        const tx = db.transaction("expenses", "readwrite");
+        tx.objectStore("expenses").add({ date: document.getElementById('expDate').value, category: "一般支出", amount, memo: document.getElementById('expMemo').value });
+        tx.oncomplete = () => refreshUI();
+    }
+
+    async function calculateProfit() {
+        const m = document.getElementById('profitMonth').value;
+        const res = await getMonthlyStats(m);
+        document.getElementById('p-income').innerText = `$${fmtInt(res.income)}`;
+        document.getElementById('p-cost').innerText = `$${fmtInt(res.cogs)}`;
+        document.getElementById('p-exp').innerText = `$${fmtInt(res.exp)}`;
+        const net = res.income - res.cogs - res.exp;
+        document.getElementById('p-net').innerText = `$${fmtInt(net)}`;
+        document.getElementById('p-net').parentElement.style.backgroundColor = net >= 0 ? "#2196f3" : "#d32f2f";
+    }
+
+    function refreshUI() {
+        const tx = db.transaction(["products", "purchases", "sales", "expenses"], "readonly");
+        const invBody = document.querySelector("#inventoryTable tbody");
+        invBody.innerHTML = "";
+        tx.objectStore("products").getAll().onsuccess = (e) => {
+            e.target.result.forEach(p => {
+                invBody.innerHTML += `<tr><td>${p.name}</td><td>${p.qty}</td><td>$${fmtDec(p.avgCost)}</td><td>$${fmtInt(p.qty*p.avgCost)}</td></tr>`;
+            });
+        };
+        updateTable(tx, "purchases", "#purchaseTable tbody", "filterBuyMonth");
+        updateTable(tx, "sales", "#salesHistoryTable tbody", "filterSellMonth");
+        updateTable(tx, "expenses", "#expenseTable tbody", "filterExpMonth");
+        const select = document.getElementById("sellSelect");
+        select.innerHTML = "";
+        tx.objectStore("products").getAll().onsuccess = (e) => {
+            e.target.result.forEach(p => select.innerHTML += `<option value="${p.name}">${p.name}</option>`);
+        };
+    }
+
+    function updateTable(tx, store, tbodyId, monthId) {
+        const body = document.querySelector(tbodyId);
+        const m = document.getElementById(monthId).value;
+        body.innerHTML = "";
+        tx.objectStore(store).getAll().onsuccess = (e) => {
+            e.target.result.reverse().forEach(d => {
+                if(d.date.startsWith(m)) {
+                    if(store === "purchases") body.innerHTML += `<tr><td>${d.date}</td><td>${d.name}</td><td>${d.qty}</td><td>$${fmtInt(d.price)}</td><td>$${fmtInt(d.qty*d.price)}</td><td><button class="btn-del" onclick="delData('${store}',${d.id})">刪除</button></td></tr>`;
+                    if(store === "sales") body.innerHTML += `<tr><td>${d.date}</td><td>${d.customer}</td><td>${d.product}</td><td>${d.qty}</td><td>$${fmtInt(d.price)}</td><td>$${fmtInt(d.qty*d.price)}</td><td><button class="btn-del" onclick="delData('${store}',${d.id})">刪除</button></td></tr>`;
+                    if(store === "expenses") body.innerHTML += `<tr><td>${d.date}</td><td>${d.category}</td><td>$${fmtInt(d.amount)}</td><td>${d.memo || ''}</td><td><button class="btn-del" onclick="delData('${store}',${d.id})">刪除</button></td></tr>`;
+                }
+            });
+        };
+    }
+
+    function delData(store, id) {
+        if(!confirm("確定刪除？")) return;
+        db.transaction(store, "readwrite").objectStore(store).delete(id).onsuccess = () => refreshUI();
+    }
+
+    function exportToExcel(tableId, name) {
+        const rows = document.getElementById(tableId).querySelectorAll("tr");
+        let csv = "\ufeff";
+        rows.forEach(r => {
+            let cols = Array.from(r.querySelectorAll("th, td")).map(c => c.innerText.replace(/,/g, ""));
+            if(cols.length > 4) cols.pop();
+            csv += cols.join(",") + "\n";
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        a.download = `${name}.csv`;
+        a.click();
+    }
+
+    async function exportFullSystem() {
+        const data = {};
+        for(let s of ["products", "purchases", "sales", "expenses"]) {
+            data[s] = await new Promise(res => db.transaction(s).objectStore(s).getAll().onsuccess = e => res(e.target.result));
+        }
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
+        a.download = `ERP_Backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+    }
+
+    function importFullSystem(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const data = JSON.parse(ev.target.result);
+            Object.keys(data).forEach(s => {
+                const tx = db.transaction(s, "readwrite");
+                tx.objectStore(s).clear();
+                data[s].forEach(v => tx.objectStore(s).add(v));
+            });
+            alert("匯入成功"); location.reload();
+        };
+        reader.readAsText(e.target.files[0]);
+    }
+
+    function generateStatement() {
+        const m = document.getElementById('stateMonth').value, cst = document.getElementById('stateCust').value, comp = document.getElementById('myCompName').value || "您的公司";
+        let total = 0, html = `<h1 style="text-align:center">${comp}</h1><h2 style="text-align:center">銷售對帳單</h2><p>客戶名稱：${cst} | 對帳月份：${m}</p><table><thead><tr><th>日期</th><th>品項</th><th>數量</th><th>單價</th><th>小計</th></tr></thead><tbody>`;
+        db.transaction("sales").objectStore("sales").getAll().onsuccess = (e) => {
+            e.target.result.forEach(s => {
+                if(s.date.startsWith(m) && s.customer === cst) {
+                    html += `<tr><td>${s.date}</td><td>${s.product}</td><td>${s.qty}</td><td>$${fmtInt(s.price)}</td><td>$${fmtInt(s.qty*s.price)}</td></tr>`;
+                    total += s.qty * s.price;
+                }
+            });
+            html += `</tbody></table><h3 style="text-align:right">應收總計金額：NT$ ${fmtInt(total)}</h3>`;
+            html += `<div style="margin-top:40px; border-top:1px solid #000; padding-top:10px; font-weight:bold; color:#333;">💡 溫馨提醒：請於收到帳單後七日內完成匯款，感謝您的合作！</div>`;
+            document.getElementById('stContent').innerHTML = html;
+            document.getElementById('statementPrintSection').style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+        };
+    }
+</script>
+
+</body>
+</html>
