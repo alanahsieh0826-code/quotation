@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>迪加專用商務報價系統</title>
+    <style>
+        :root { --slate-900: #0f172a; --slate-700: #334155; --slate-500: #64748b; --slate-200: #e2e8f0; --blue-600: #2563eb; }
+        * { box-sizing: border-box; font-family: "Inter", "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        body { background: #475569; padding: 20px; display: flex; justify-content: center; color: var(--slate-900); }
+
+        .a4-page { 
+            background: white; width: 210mm; min-height: 297mm; padding: 30px 60px; 
+            box-shadow: 0 40px 100px -20px rgba(0,0,0,0.5); position: relative; display: flex; flex-direction: column;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+        .brand-zone { border-left: 3.5px solid var(--blue-600); padding-left: 12px; }
+        .company-name { font-size: 18px; font-weight: 800; border: none; outline: none; width: 350px; background: transparent; }
+        .company-sub { font-size: 14px; color: var(--slate-500); margin-top: 5px; line-height: 1.5; }
+        .company-sub input { border: none; outline: none; font-size: 14px; width: 250px; color: var(--slate-500); background: transparent; }
+
+        .doc-meta { text-align: right; }
+        .doc-label { font-size: 9px; font-weight: 800; color: var(--blue-600); letter-spacing: 2px; }
+        .doc-no-input { border: none; outline: none; text-align: right; font-size: 18px; font-weight: 300; width: 200px; background: transparent; }
+
+        .project-wrap { margin-bottom: 25px; }
+        .tag { font-size: 14px; font-weight: 800; color: var(--slate-500); text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .project-input { border: none; font-size: 16px; font-weight: 700; width: 100%; outline: none; border-bottom: 1.5px solid var(--slate-200); padding-bottom: 4px; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-bottom: 25px; }
+        .info-row { display: grid; grid-template-columns: 80px 1fr; border-bottom: 1px solid #f1f5f9; padding: 5px 0; align-items: center; }
+        .info-label { font-size: 14px; font-weight: 700; color: var(--slate-500); }
+        .info-input { border: none; outline: none; font-size: 14px; text-align: left; font-weight: 600; background: transparent; }
+
+        .table-main { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .table-main th { text-align: left; padding: 10px; font-size: 14px; color: var(--slate-500); border-bottom: 2px solid var(--slate-900); letter-spacing: 1px; }
+        .table-main td { padding: 8px 10px; border-bottom: 1px solid var(--slate-200); vertical-align: top; }
+
+        .col-id { width: 30px; font-size: 12px; color: var(--slate-500); font-weight: 800; padding-top: 12px !important; }
+        .col-desc { width: 55%; }
+        .col-qty { width: 65px; text-align: center; } 
+        .col-price { width: 110px; text-align: center; }
+        .col-sum { width: 110px; text-align: center; }
+
+        .field-amount, .sub-val, .qty-input { font-size: 14px !important; font-weight: 600; color: var(--slate-900); align-items: center;}
+        .qty-input { text-align: center; }
+
+        .auto-expand { 
+            width: 100%; border: none; outline: none; resize: none; 
+            font-size: 14px; line-height: 1.5; color: var(--slate-900); 
+            background: transparent; overflow: hidden; min-height: 1.4em;
+        }
+
+        .field-input { width: 100%; border: none; outline: none; text-align: inherit; font-size: inherit; font-weight: inherit; background: transparent; }
+
+        .footer-layout { display: flex; flex-direction: column; gap: 12px; }
+        .summary-box { align-self: flex-end; width: 250px; }
+        .sum-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 14px; color: var(--slate-500); }
+        .sum-row.grand { border-top: 2px solid var(--slate-900); margin-top: 5px; padding-top: 8px; color: var(--slate-900); font-size: 18px; font-weight: 900; }
+
+        .card { background: #fdfdfd; border-radius: 6px; padding: 12px 15px; border: 1px solid var(--slate-200); }
+        .card-title { font-size: 14px; font-weight: 800; color: var(--slate-900); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .card-title::before { content: ""; width: 3px; height: 10px; background: var(--blue-600); }
+
+        .pay-desc { font-weight: normal; font-size: 14px; }
+        .pay-pct-input { width: 60px; text-align: center; color: var(--blue-600); font-weight: 800; font-size: 14px; background: #eff6ff; border-radius: 4px; } 
+
+        .edit-area { 
+            width: 100%; border: none; background: transparent; font-size: 14px; 
+            color: var(--slate-700); outline: none; line-height: 1.5; 
+            resize: none; overflow: hidden; min-height: 2em; white-space: pre-wrap;
+        }
+
+        /* 特別針對付款資訊區塊加大空間 */
+        #bankInfo {
+            min-height: 5em; /* 足夠顯示至少 3 行，並保留一點呼吸空間 */
+            line-height: 1.6;
+            padding-top: 5px;
+        }
+
+        .signature-zone { margin-top: 15px; align-self: flex-end; text-align: center; }
+        .signature-line { width: 160px; border-bottom: 1.5px solid var(--slate-900); margin-bottom: 5px; height: 30px; }
+
+        .toolbar { position: fixed; left: 20px; top: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+        button { border: none; border-radius: 4px; padding: 8px 14px; font-weight: 700; cursor: pointer; color: white; font-size: 11px; }
+        .btn-dark { background: var(--slate-900); }
+        .btn-blue { background: var(--blue-600); }
+        .btn-del { background: #fee2e2; color: #ef4444; padding: 2px 5px; font-size: 12px; box-shadow: none; }
+        .btn-warn { background: #f59e0b; color: white; margin-top: 10px; }
+
+        @media print {
+            .toolbar, .btn-del { display: none !important; }
+            body { background: white; padding: 0; }
+            .a4-page { box-shadow: none; width: 100%; margin: 0; padding: 10px 40px; }
+            .pay-pct-input { background: transparent !important; }
+        }
+    </style>
+</head>
+<body oninput="saveAllData()">
+
+<div class="toolbar">
+    <button class="btn-dark" onclick="addRow()">＋ 新增報價項目</button>
+    <button class="btn-dark" style="background: #475569;" onclick="addPayRow()">＋ 新增付款期數</button>
+    <button class="btn-blue" onclick="window.print()">🖨️ 列印 / 存為 PDF</button>
+    <button class="btn-warn" onclick="clearData()">🧹 清空重填</button>
+</div>
+
+<div class="a4-page">
+    <div class="header">
+        <div class="brand-zone">
+            <input type="text" class="company-name save-field" id="my_co_name" value="迪加股份有限公司">
+            <div class="company-sub">
+                統一編號：<input type="text" class="save-field" id="my_co_tax" value="83100770"> <br>
+                聯絡人員：<input type="text" class="save-field" id="my_co_boss" value="楊文畬"> <br>
+                電子郵件：<input type="text" class="save-field" id="my_co_email" value="michael.yang@dejia.com.tw">
+            </div>
+        </div>
+        <div class="doc-meta">
+            <div class="doc-label">QUOTATION</div>
+            <input type="text" class="doc-no-input save-field" id="doc_no" value="QTN-2026031901">
+        </div>
+    </div>
+
+    <div class="project-wrap">
+        <span class="tag">專案名稱 / Project Name</span>
+        <input type="text" class="project-input save-field" id="proj_name" placeholder="請輸入專案名稱">
+    </div>
+
+    <div class="info-grid">
+        <div class="info-col">
+            <div class="info-row"><span class="info-label">客戶抬頭</span><input type="text" id="cust_name" class="info-input save-field" placeholder="客戶全銜"></div>
+            <div class="info-row"><span class="info-label">客戶統編</span><input type="text" id="cust_tax" class="info-input save-field"></div>
+            <div class="info-row"><span class="info-label">聯絡人員</span><input type="text" id="cust_contact" class="info-input save-field"></div>
+        </div>
+        <div class="info-col">
+            <div class="info-row"><span class="info-label">報價日期</span><input type="date" id="doc_date" class="info-input save-field"></div>
+            <div class="info-row"><span class="info-label">有效期限</span><input type="text" id="doc_valid" class="info-input save-field" value="30 天"></div>
+            <div class="info-row"><span class="info-label">報價幣別</span><input type="text" id="doc_cur" class="info-input save-field" value="TWD"></div>
+        </div>
+    </div>
+
+    <table class="table-main">
+        <thead>
+            <tr>
+                <th class="col-id">#</th>
+                <th class="col-desc">項目描述 (DESCRIPTION)</th>
+                <th class="col-qty">數量</th>
+                <th class="col-price">單價 (未稅)</th>
+                <th class="col-sum">小計</th>
+                <th style="width: 20px;" class="toolbar"></th>
+            </tr>
+        </thead>
+        <tbody id="itemBody">
+            </tbody>
+    </table>
+
+    <div class="footer-layout">
+        <div class="summary-box">
+            <div class="sum-row"><span>合計 (未稅)</span><span id="res-raw">$ 0</span></div>
+            <div class="sum-row"><span>營業稅 (5%)</span><span id="res-tax">$ 0</span></div>
+            <div class="sum-row grand"><span style="font-size: 14px; font-weight: 800; align-self: center;">TOTAL</span><span id="res-grand">$ 0</span></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">付款條件與期數拆分</div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tbody id="payBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-title">備註事項與細則</div>
+            <textarea id="memo" class="edit-area save-field" oninput="resize(this)" placeholder="輸入備註...">1. 本報價單有效期限為 30 天。
+2. 匯款手續費由由付款方負擔。</textarea>
+        </div>
+
+        <div class="card">
+            <div class="card-title">付款資訊 / 匯款帳號</div>
+            <textarea id="bankInfo" class="edit-area save-field" oninput="resize(this)" placeholder="銀行名稱、帳號、戶名...">銀行：(822)中國信託銀行 藝文分行
+戶名：迪加股份有限公司
+帳號：204540189038</textarea>
+        </div>
+
+        <div class="signature-zone">
+            <div class="signature-line"></div>
+            <div class="signature-label" style="font-size: 12px; font-weight: 700; color: var(--slate-500);">核准人簽章 / Authorized Signature</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 初始化與載入
+    window.onload = function() {
+        if (!loadAllData()) {
+            addRow();
+            addPayRow("第一期：訂金 (30%)", 30);
+            document.getElementById('doc_date').valueAsDate = new Date();
+        }
+        document.querySelectorAll('textarea').forEach(el => resize(el)); // 確保預設文字高度正確
+        calc();
+    }
+
+    function formatNum(n) { return Number(n).toLocaleString('en-US'); }
+    function toMoney(el) { 
+        let val = el.value.replace(/,/g, ''); 
+        if(!isNaN(val) && val !== "") el.value = formatNum(val); 
+        saveAllData();
+    }
+    function toNum(el) { el.value = el.value.replace(/,/g, ''); }
+    function resize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+    // 新增報價項目
+    function addRow(desc = "", qty = 1, price = 0) {
+        const tbody = document.getElementById('itemBody');
+        const num = (tbody.rows.length + 1).toString().padStart(2, '0');
+        const row = `<tr>
+            <td class="col-id">${num}</td>
+            <td class="col-desc"><textarea class="auto-expand item-desc" rows="1" oninput="resize(this);saveAllData()">${desc}</textarea></td>
+            <td class="col-qty"><input type="number" class="field-input qty-input" value="${qty}" oninput="calc();saveAllData()"></td>
+            <td class="col-price"><input type="text" class="field-input field-amount price-format" value="${formatNum(price)}" onfocus="toNum(this)" onblur="toMoney(this)" oninput="calc()"></td>
+            <td class="col-sum sub-val">0</td>
+            <td class="toolbar"><button class="btn-del" onclick="this.closest('tr').remove();calc();saveAllData();">✕</button></td>
+        </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+        resize(tbody.lastElementChild.querySelector('textarea'));
+    }
+
+    // 新增付款期數
+    function addPayRow(desc = "", pct = 0) {
+        const row = `<tr>
+            <td><input type="text" class="field-input pay-desc" value="${desc}" oninput="saveAllData()"></td>
+            <td style="text-align: right; font-size: 11px;">比例 <input type="number" class="pay-pct field-input pay-pct-input" value="${pct}" oninput="calc();saveAllData()"> %</td>
+            <td style="text-align: right; font-weight: 800; font-size: 14px;" class="pay-amt">0</td>
+            <td class="toolbar" style="text-align: right;"><button class="btn-del" onclick="this.closest('tr').remove();calc();saveAllData();">✕</button></td>
+        </tr>`;
+        document.getElementById('payBody').insertAdjacentHTML('beforeend', row);
+    }
+
+    // 計算總額
+    function calc() {
+        let raw = 0;
+        document.querySelectorAll('#itemBody tr').forEach((row, i) => {
+            row.cells[0].innerText = (i + 1).toString().padStart(2, '0');
+            const q = row.querySelector('.qty-input').value || 0;
+            const p = row.querySelector('.price-format').value.replace(/,/g, '') || 0;
+            const sub = q * p;
+            row.querySelector('.sub-val').innerText = formatNum(sub);
+            raw += sub;
+        });
+
+        const tax = Math.round(raw * 0.05);
+        const grand = raw + tax;
+
+        document.getElementById('res-raw').innerText = '$ ' + formatNum(raw);
+        document.getElementById('res-tax').innerText = '$ ' + formatNum(tax);
+        document.getElementById('res-grand').innerText = '$ ' + formatNum(grand);
+
+        document.querySelectorAll('#payBody tr').forEach(row => {
+            const pct = row.querySelector('.pay-pct').value || 0;
+            const amt = Math.round(grand * (pct / 100));
+            row.querySelector('.pay-amt').innerText = '$ ' + amt.toLocaleString();
+        });
+    }
+
+    // --- 儲存機制核心 ---
+    
+    function saveAllData() {
+        const data = { fields: {}, items: [], payments: [] };
+        document.querySelectorAll('.save-field').forEach(el => data.fields[el.id] = el.value);
+        document.querySelectorAll('#itemBody tr').forEach(row => {
+            data.items.push({
+                desc: row.querySelector('.item-desc').value,
+                qty: row.querySelector('.qty-input').value,
+                price: row.querySelector('.price-format').value.replace(/,/g, '')
+            });
+        });
+        document.querySelectorAll('#payBody tr').forEach(row => {
+            data.payments.push({
+                desc: row.querySelector('.pay-desc').value,
+                pct: row.querySelector('.pay-pct').value
+            });
+        });
+        localStorage.setItem('quotationData_v20', JSON.stringify(data));
+    }
+
+    function loadAllData() {
+        const saved = localStorage.getItem('quotationData_v20');
+        if (!saved) return false;
+        const data = JSON.parse(saved);
+        for (let id in data.fields) {
+            const el = document.getElementById(id);
+            if (el) el.value = data.fields[id];
+        }
+        document.getElementById('itemBody').innerHTML = '';
+        data.items.forEach(item => addRow(item.desc, item.qty, item.price));
+        document.getElementById('payBody').innerHTML = '';
+        data.payments.forEach(pay => addPayRow(pay.desc, pay.pct));
+        return true;
+    }
+
+    function clearData() {
+        if (confirm("確定要清空所有內容（包含已儲存的公司基本資訊與銀行帳號）並重新開始嗎？")) {
+            localStorage.removeItem('quotationData_v20');
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
