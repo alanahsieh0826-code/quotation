@@ -1,360 +1,917 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>微型企業帳務系統_手動備份版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyERP Pro v5.0 - 終極穩定版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 'gh-bg': '#fdf8f1', 'gh-green': '#4a7c59', 'gh-blue': '#7fb3d5', 'gh-orange': '#e67e22', 'gh-text': '#5d4037' } } } }
+    </script>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        
-        /* 醒目的備份提醒區塊 */
-        .backup-alert { 
-            background-color: #fff3e0; 
-            border-left: 5px solid #ff9800; 
-            color: #e65100; 
-            padding: 15px; 
-            margin-bottom: 20px; 
-            border-radius: 4px; 
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-        }
-        .backup-alert i { margin-right: 10px; font-size: 20px; }
-
-        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; overflow-x: auto; gap: 5px; }
-        .tab { padding: 12px 25px; cursor: pointer; border: none; background: #eee; border-radius: 8px 8px 0 0; font-weight: bold; color: #666; }
-        .tab.active { background: #1a73e8; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .section { padding: 20px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        button { background-color: #1a73e8; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-excel { background-color: #2e7d32; margin-bottom: 10px; }
-        .btn-del { background-color: #ff5252; padding: 5px 10px; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #f8f9fa; }
-        
-        .profit-card { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 20px 0; }
-        .card { padding: 20px; border-radius: 8px; text-align: center; color: white; }
-        .bg-income { background-color: #4caf50; } .bg-cost { background-color: #795548; } 
-        .bg-exp { background-color: #ff9800; } .bg-net { background-color: #2196f3; }
-
-        @media print {
-            @page { size: A4; margin: 15mm; }
-            body { background: white; padding: 0; }
-            .container { box-shadow: none; border: none; width: 100%; max-width: none; padding: 0; margin: 0; }
-            .tabs, .section:not(#statementPrintSection), h2, button, .system-tools, input, .backup-alert { display: none !important; }
-            #statementPrintSection { display: block !important; border: none !important; padding: 0 !important; }
-            #stContent table { width: 100%; border: 1px solid #000; }
-            #stContent th, #stContent td { border: 1px solid #000; padding: 8px; color: black; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fdf8f1; color: #5d4037; }
+        .hidden-section { display: none; }
+        .card { background: white; border-radius: 1.5rem; border: 1px solid #e0d5c1; padding: 2.5rem; box-shadow: 0 4px 15px rgba(224, 213, 193, 0.15); margin-bottom: 2rem; }
+        input, select { border: 2px solid #cbd5e1; border-radius: 0.8rem; padding: 0.85rem 1rem; margin-top: 0.5rem; font-size: 1rem; outline: none; background: #fff; }
+        input:focus { border-color: #7fb3d5; box-shadow: 0 0 0 4px rgba(127, 179, 213, 0.2); }
+        input[readonly] { background-color: #f1f5f9; cursor: not-allowed; border-color: #cbd5e1; }
+        .filter-input { width: 220px !important; height: 3.5rem; }
+        .search-input { width: 300px !important; height: 3.5rem; }
+        table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+        th { background-color: #f8f1e5; padding: 1.25rem 1rem; border-bottom: 2px solid #e0d5c1; color: #8d6e63; text-align: left; }
+        td { padding: 1.25rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 1rem; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .detail-row { background-color: #fdfcf9 !important; display: none; }
+        .detail-row td { padding: 0.5rem 2rem; }
+        .tab-btn { background: white; border: 2px solid #e0d5c1; color: #8d6e63; padding: 0.8rem 1.5rem; border-radius: 1rem; font-weight: 700; transition: 0.3s; }
+        .tab-active { background: #4a7c59 !important; color: white !important; transform: translateY(-3px); }
+        .btn-orange { background: #e67e22; color: white; width: 100%; padding: 1.2rem; border-radius: 1rem; font-weight: 700; font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
+        .status-paid { background-color: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 99px; font-size: 0.8rem; font-weight: bold; }
+        .status-open { background-color: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 99px; font-size: 0.8rem; font-weight: bold; }
     </style>
 </head>
-<body>
-
-<div class="container">
-    <h2>🏢 微型企業帳務系統_手動備份版</h2>
-
-    <div class="backup-alert">
-        <span>⚠️ 系統提醒：瀏覽器快取並非永久儲存，請務必定期使用下方「全系統備份」功能下載資料，以免數據遺失。</span>
-    </div>
-
-    <div class="tabs">
-        <button class="tab active" onclick="openTab(event, 'tab-purchase')">📦 進貨</button>
-        <button class="tab" onclick="openTab(event, 'tab-sales')">💰 銷售</button>
-        <button class="tab" onclick="openTab(event, 'tab-expense')">💸 支出</button>
-        <button class="tab" onclick="openTab(event, 'tab-report')">📊 庫存</button>
-        <button class="tab" onclick="openTab(event, 'tab-profit')">📈 損益分析</button>
-        <button class="tab" onclick="openTab(event, 'tab-statement')">🧾 對帳單</button>
-    </div>
-
-    <div id="tab-profit" class="tab-content">
-        <div class="section">
-            <h3>本月損益數據數據</h3>
-            月份：<input type="month" id="profitMonth" onchange="calculateProfit()" style="width: 200px;">
-            <div class="profit-card">
-                <div class="card bg-income"><h4>總營收</h4><p id="p-income">$0</p></div>
-                <div class="card bg-cost"><h4>銷貨成本</h4><p id="p-cost">$0</p></div>
-                <div class="card bg-exp"><h4>營運支出</h4><p id="p-exp">$0</p></div>
-                <div class="card bg-net"><h4>本月淨利</h4><p id="p-net">$0</p></div>
+<body class="p-4 md:p-10">
+    <div class="max-w-7xl mx-auto">
+        <div class="card bg-gradient-to-br from-orange-50 to-white">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gh-green">營運羅盤</h2>
+<div class="flex gap-2 items-center mb-4">
+    <label class="text-xs font-bold text-gray-400">查詢區間：</label>
+    <input type="date" id="dashFS" class="p-1 text-sm border rounded" onchange="refreshUI()">
+    <span class="text-gray-400">至</span>
+    <input type="date" id="dashFE" class="p-1 text-sm border rounded" onchange="refreshUI()">
+    <button onclick="clearDashFilter()" class="text-xs bg-gray-200 px-2 py-1 rounded">清除</button>
+</div>
+                <div class="flex gap-2">
+                    <button onclick="exportData()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold">備份</button>
+                    <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+                    <button onclick="document.getElementById('importFile').click()" class="bg-blue-400 text-white px-4 py-2 rounded-xl text-xs font-bold">還原</button>
+                </div>
             </div>
-            <p style="color: #666; font-size: 14px;">* 損益計算包含當月所有銷售收入扣除產品成本與營運支出。</p>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="text-center border-r border-dashed border-orange-200"><p class="text-[10px] text-gray-400 font-bold uppercase">總營收</p><p id="dashSales" class="text-xl font-black">$ 0</p></div>
+                <div class="text-center border-r border-dashed border-orange-200 text-orange-600"><p class="text-[10px] text-gray-400 font-bold uppercase">銷貨成本</p><p id="dashCost" class="text-xl font-black">$ 0</p></div>
+                <div class="text-center border-r border-dashed border-orange-200 text-rose-500"><p class="text-[10px] text-gray-400 font-bold uppercase">支出費用</p><p id="dashExp" class="text-xl font-black">$ 0</p></div>
+                <div class="text-center border-r border-dashed border-orange-200 text-gh-green"><p class="text-[10px] text-gray-400 font-bold uppercase">預估淨利</p><p id="dashProfit" class="text-xl font-black">$ 0</p></div>
+                <div class="text-center text-gh-blue"><p class="text-[10px] text-gray-400 font-bold uppercase">待收帳款</p><p id="dashOpenAR" class="text-xl font-black">$ 0</p></div>
+            </div>
         </div>
-    </div>
 
-    <div id="tab-purchase" class="tab-content active">
-        <div class="section">
-            <h3>新增進貨</h3>
-            <div class="form-group"><label>日期</label><input type="date" id="buyDate" class="default-date"></div>
-            <div class="form-group"><label>產品名稱</label><input type="text" id="buyName"></div>
-            <div class="form-group"><label>數量</label><input type="number" id="buyQty" value="1"></div>
-            <div class="form-group"><label>單價</label><input type="number" id="buyPrice" value="0"></div>
-            <button onclick="handlePurchase()">確認進貨</button>
+        <div class="flex flex-wrap gap-2 mb-8 pb-4 border-b-2 border-dashed border-slate-200">
+            <button onclick="switchTab('pur', this)" class="tab-btn tab-active">📦 進貨</button>
+            <button onclick="switchTab('sale', this)" class="tab-btn">💰 銷售</button>
+            <button onclick="switchTab('exp', this)" class="tab-btn">💸 支出</button>
+            <button onclick="switchTab('acc', this)" class="tab-btn">🧾 對帳</button>
+            <button onclick="switchTab('inv', this)" class="tab-btn">🏠 庫存</button>
+            <button onclick="switchTab('bpm', this)" class="tab-btn">👥 夥伴設定</button>
+            <button onclick="switchTab('itm', this)" class="tab-btn">🏷️ 料號設定</button>
         </div>
-        <div class="section">
-            <h3>進貨明細</h3>
-            <input type="month" id="filterBuyMonth" onchange="refreshPurchaseTable()" style="width: 180px;">
-            <button class="btn-excel" onclick="exportToExcel('purchaseTable', '進貨明細')">匯出 Excel</button>
-            <table id="purchaseTable"><thead><tr><th>日期</th><th>品項</th><th>數量</th><th>單價</th><th>小計</th><th>操作</th></tr></thead><tbody></tbody></table>
-        </div>
-    </div>
 
-    <div id="tab-sales" class="tab-content">
-        <div class="section">
-            <h3>新增銷售</h3>
-            <div class="form-group"><label>日期</label><input type="date" id="sellDate" class="default-date"></div>
-            <div class="form-group"><label>產品</label><select id="sellSelect"></select></div>
-            <div class="form-group"><label>客戶名稱</label><input type="text" id="custName"></div>
-            <div class="form-group"><label>數量</label><input type="number" id="sellQty" value="1"></div>
-            <div class="form-group"><label>售價</label><input type="number" id="sellPrice" value="0"></div>
-            <button onclick="handleSale()" style="background:#e91e63">確認銷售</button>
-        </div>
-        <div class="section">
-            <h3>銷售明細</h3>
-            <input type="month" id="filterSellMonth" onchange="refreshSalesTable()" style="width: 180px;">
-            <button class="btn-excel" onclick="exportToExcel('salesHistoryTable', '銷售明細')">匯出 Excel</button>
-            <table id="salesHistoryTable"><thead><tr><th>日期</th><th>客戶</th><th>品項</th><th>數量</th><th>單價</th><th>小計</th><th>操作</th></tr></thead><tbody></tbody></table>
-        </div>
-    </div>
-
-    <div id="tab-expense" class="tab-content">
-        <div class="section">
-            <h3>記錄營運支出</h3>
-            <div class="form-group"><label>日期</label><input type="date" id="expDate" class="default-date"></div>
-            <div class="form-group"><label>金額</label><input type="number" id="expAmount" value="0"></div>
-            <div class="form-group"><label>備註</label><input type="text" id="expMemo" placeholder="例如：水電、租金"></div>
-            <button onclick="handleExpense()" style="background:#ff9800">儲存紀錄</button>
-        </div>
-        <div class="section">
-            <h3>支出明細</h3>
-            <input type="month" id="filterExpMonth" onchange="refreshExpenseTable()" style="width: 180px;">
-            <button class="btn-excel" onclick="exportToExcel('expenseTable', '支出明細')">匯出 Excel</button>
-            <table id="expenseTable"><thead><tr><th>日期</th><th>類別</th><th>金額</th><th>備註</th><th>操作</th></tr></thead><tbody></tbody></table>
-        </div>
-    </div>
-
-    <div id="tab-report" class="tab-content">
-        <div class="section">
-            <h3>庫存狀態概覽</h3>
-            <button class="btn-excel" onclick="exportToExcel('inventoryTable', '庫存報表')">匯出庫存 Excel</button>
-            <table id="inventoryTable"><thead><tr><th>產品名稱</th><th>庫存數量</th><th>平均成本</th><th>庫存總值</th></tr></thead><tbody></tbody></table>
-        </div>
-    </div>
-
-    <div id="tab-statement" class="tab-content">
-        <div class="section">
-            <h3>產出對帳單</h3>
-            <div class="form-group"><input type="text" id="myCompName" placeholder="您的公司名稱"></div>
-            <div class="form-group"><input type="month" id="stateMonth"></div>
-            <div class="form-group"><input type="text" id="stateCust" placeholder="客戶名稱"></div>
-            <button onclick="generateStatement()">產生對帳單預覽</button>
-        </div>
-        <div id="statementPrintSection" class="section" style="display:none;">
-            <div id="stContent"></div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button onclick="window.print()">🖨️ 確認列印 PDF</button>
+        <div id="mainContent">
+            <section id="pur-sec" class="tab-content">
+                <div class="card">
+                    <h3 class="font-bold mb-4 text-gh-green text-lg">新增進貨登記</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end border-b border-dashed pb-6 mb-6">
+                        <div><label>日期</label><input type="date" id="pDate"></div>
+                        <div><label>供應商</label><select id="pVendSel"></select></div>
+                        <div class="md:col-span-2"><label>單據備註</label><input type="text" id="pMemo"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end mb-4">
+                        <div class="md:col-span-2"><label>產品項目</label><select id="pItemSel"></select></div>
+                        <div><label>數量</label>
+<div class="flex gap-1">
+    <input type="number" id="pQty" value="1" class="flex-1">
+    <select id="pUnitSel" class="w-24 mt-2"></select></div></div>
+                        <div><label>該項總金額</label><input type="number" id="pTotalIn" value="0"></div>
+                        <button onclick="addP()" class="bg-gh-green text-white p-3 rounded-xl font-bold">+ 加入清單</button>
+                    </div>
+                    <div id="pTempArea" class="bg-emerald-50 p-4 rounded-xl mb-6 hidden border border-emerald-100">
+                        <table class="w-full text-sm mb-2"><tbody id="pTempTbody"></tbody></table>
+                        <div class="text-right font-black text-xl text-gh-green" id="pTotalDisp">總計: $ 0</div>
+                    </div>
+                    <button onclick="saveP()" class="btn-orange">確認入庫並更新成本</button>
+                </div>
+<div class="card overflow-hidden">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <h3 class="font-bold text-xl text-gh-text whitespace-nowrap">進貨歷史明細</h3>
+        
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="toggleAllD('pTable')" class="bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300">一鍵展開/收合</button>
+            <button onclick="exportToCSV('pur')" class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-200">匯出 CSV</button>
+            
+            <div class="flex items-center gap-1 ml-2">
+                <input type="date" id="pFS" class="p-2 border rounded-lg text-sm w-36" onchange="renderP()">
+                <span class="text-gray-400 text-xs">~</span>
+                <input type="date" id="pFE" class="p-2 border rounded-lg text-sm w-36" onchange="renderP()">
+                <input type="text" id="pFK" placeholder="搜尋供應商..." class="p-2 border rounded-lg text-sm w-44" oninput="renderP()">
             </div>
         </div>
     </div>
 
-    <div class="section system-tools" style="background: #f1f3f4; border: 2px solid #ff9800;">
-        <h4 style="color: #e65100;">💾 全系統備份與恢復工具</h4>
-        <button class="btn-tool" onclick="exportFullSystem()" style="background: #ff9800;">📤 立即匯出備份檔 (.json)</button>
-        <button class="btn-tool" onclick="document.getElementById('fullImportFile').click()">📥 匯入歷史資料</button>
-        <input type="file" id="fullImportFile" style="display:none" onchange="importFullSystem(event)">
+    <div class="overflow-x-auto">
+        <table id="pTable">
+            <thead>
+                <tr>
+                    <th style="width:12%">日期</th>
+                    <th>供應商</th>
+                    <th style="width:15%">總額</th>
+                    <th style="width:10%">狀態</th>
+                    <th>備註</th>
+                    <th style="width:10%">操作</th>
+                </tr>
+            </thead>
+            <tbody id="pTbody"></tbody>
+        </table>
+    </div>
+</div>            </section>
+
+            <section id="sale-sec" class="tab-content hidden-section">
+                <div class="card">
+                    <h3 class="font-bold mb-4 text-gh-blue text-lg">建立銷售單</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end border-b border-dashed pb-6 mb-6">
+                        <div><label>日期</label><input type="date" id="sDate" onchange="upSD()"></div>
+                        <div><label>客戶</label><select id="sCustSel" onchange="upSD()"></select></div>
+                        <div class="md:col-span-2"><label>銷售備註</label><input type="text" id="sMemo"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end mb-4">
+                        <div class="md:col-span-2"><label>產品項目</label><select id="sItemSel"></select></div>
+                        <div><label>數量</label>
+    <div class="flex gap-1">
+        <input type="number" id="sQty" value="1" class="flex-1">
+        <select id="sUnitSel" class="w-24 mt-2"></select> </div></div>
+                        <div><label>銷售金額</label><input type="number" id="sTotalIn" value="0"></div>
+                        <button onclick="addS()" class="bg-gh-blue text-white p-3 rounded-xl font-bold">+ 加入清單</button>
+                    </div>
+                    <div id="sTempArea" class="bg-blue-50 p-4 rounded-xl mb-6 hidden border border-blue-100">
+                        <table class="w-full text-sm mb-2"><tbody id="sTempTbody"></tbody></table>
+                        <div class="flex justify-between pt-2 border-t text-blue-700 font-bold"><span id="sDue">到期日: ---</span><span id="sTotalDisp">總計: $ 0</span></div>
+                    </div>
+                    <button onclick="saveS()" class="btn-orange">確認銷售過帳</button>
+                </div>
+               <div class="card overflow-hidden">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <h3 class="font-bold text-xl text-gh-text whitespace-nowrap">銷售歷史明細</h3>
+        
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="toggleAllD('sTable')" class="bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300 transition">一鍵展開/收合</button>
+            <button onclick="exportToCSV('sales')" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-200 transition">匯出 CSV</button>
+            
+            <div class="flex items-center gap-1 ml-2">
+                <input type="date" id="sFS" class="p-2 border rounded-lg text-sm w-36" onchange="renderS()">
+                <span class="text-gray-400 text-xs">~</span>
+                <input type="date" id="sFE" class="p-2 border rounded-lg text-sm w-36" onchange="renderS()">
+                <input type="text" id="sFK" placeholder="搜尋客戶..." class="p-2 border rounded-lg text-sm w-44" oninput="renderS()">
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table id="sTable">
+            <thead>
+                <tr>
+                    <th style="width:12%">日期</th>
+                    <th>客戶名稱</th>
+                    <th style="width:15%">總金額</th>
+                    <th style="width:10%">狀態</th>
+                    <th>備註</th>
+                    <th style="width:10%">操作</th>
+                </tr>
+            </thead>
+            <tbody id="sTbody"></tbody>
+        </table>
     </div>
 </div>
+            </section>
 
+            <section id="acc-sec" class="tab-content hidden-section">
+                <div class="card">
+                    <h3 class="font-bold mb-6 text-gh-orange text-xl">帳款沖銷管理</h3>
+                    <div id="clrPnl" class="bg-blue-50 border-2 border-blue-200 p-6 rounded-2xl mb-8 hidden flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div id="clrInf" class="font-bold text-blue-700"></div>
+                        <div class="flex gap-2 items-center">
+                            <div class="flex flex-col"><label class="text-xs">結清日期</label><input type="date" id="clrDate" class="p-2 w-40"></div>
+                            <div class="flex flex-col"><label class="text-xs">備註</label><input type="text" id="clrMemo" placeholder="末五碼..." class="p-2 w-40"></div>
+                            <button onclick="doClr()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow-md">執行沖銷</button>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-8 items-center"><label class="flex items-center gap-2 font-bold"><input type="checkbox" id="accHP" onchange="renderA()" checked> 隱藏已結清</label><input type="text" id="accFK" placeholder="搜尋夥伴/單號..." class="search-input" oninput="renderA()"></div>
+<table id="accTable">
+    <thead>
+        <tr>
+<th style="width:8%">類別</th>
+        <th style="width:20%">夥伴對象</th>
+        <th style="width:12%">交易日期</th>
+        <th style="width:12%">到期日</th>
+        <th style="width:12%" class="text-right">未收金額</th>
+        <th style="width:10%" class="text-center">狀態</th>
+        <th style="width:12%">結清日期</th>
+        <th>沖銷備註</th>
+    </thead>
+    <tbody id="accTbody"></tbody>
+</table>
+                </div>
+            </section>
+
+            <section id="inv-sec" class="tab-content hidden-section">
+                <div class="card overflow-hidden">
+                    <div class="flex justify-between items-center mb-8"><h2 class="text-xl font-bold text-gh-green">即時庫存查詢</h2><input type="text" id="invFK" placeholder="搜尋品名/料號..." class="search-input" oninput="renderInv()"></div>
+                    <table id="invTable"><thead><tr><th>料號</th><th>品名規格</th><th class="text-right">結存數量</th><th>單位</th><th class="text-center">最後進貨日</th></tr></thead><tbody id="invTbody"></tbody></table>
+                </div>
+            </section>
+
+            <section id="exp-sec" class="tab-content hidden-section">
+                <div class="card">
+                    <h3 class="font-bold mb-4 text-rose-500">支出登記</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                        <input type="date" id="eDate"><select id="eCat"><option>租金</option><option>水電</option><option>薪資</option><option>雜支</option></select><input type="number" id="eAmt" placeholder="金額"><input type="text" id="eMemo" placeholder="備註">
+                        <button onclick="saveE()" class="md:col-span-4 bg-rose-500 text-white p-3 rounded-xl font-bold">儲存</button>
+                    </div>
+                </div>
+                <div class="card overflow-hidden">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <h3 class="font-bold text-xl text-rose-500 whitespace-nowrap">支出歷史明細</h3>
+        
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="exportToCSV('exp')" class="bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-rose-200 transition">匯出 CSV</button>
+            
+            <div class="flex items-center gap-1 ml-2">
+                <input type="date" id="eFS" class="p-2 border rounded-lg text-sm w-36" onchange="renderE()">
+                <span class="text-gray-400 text-xs">~</span>
+                <input type="date" id="eFE" class="p-2 border rounded-lg text-sm w-36" onchange="renderE()">
+                <input type="text" id="eFK" placeholder="搜尋備註..." class="p-2 border rounded-lg text-sm w-44" oninput="renderE()">
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table id="eTable">
+            <thead>
+                <tr>
+                    <th style="width:15%">日期</th>
+                    <th style="width:15%">類別</th>
+                    <th style="width:15%">金額</th>
+                    <th>備註 (可直接修改)</th>
+                    <th style="width:10%">操作</th>
+                </tr>
+            </thead>
+            <tbody id="eTbody"></tbody>
+        </table>
+    </div>
+</div>
+            </section>
+
+            <section id="bpm-sec" class="tab-content hidden-section">
+                <div class="card">
+                    <h3 class="font-bold mb-6 text-gh-orange">夥伴設定</h3>
+                    <form id="bpForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6"><div><label>編號</label><input type="text" id="mBpID" readonly class="bg-gray-100"></div><div><label>名稱</label><input type="text" id="mBpName" required></div><div><label>類型</label><select id="mBpRole"><option value="Both">兩者皆是</option><option value="Customer">客戶</option><option value="Vendor">供應商</option></select></div><div><label>天數</label><div class="flex gap-1"><select id="mBpType"><option value="monthly">月結</option><option value="post">交易後</option></select><input type="number" id="mBpDays" value="30"></div></div></div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6"><input type="text" id="mBpContact" placeholder="聯絡人"><input type="text" id="mBpMemo" placeholder="備註" class="md:col-span-3"></div>
+                        <button type="submit" onclick="saveBP(event)" id="bpSubBtn" class="btn-orange">儲存</button>
+                    </form>
+                </div>
+                <div class="card overflow-hidden"><div class="flex justify-between items-center mb-6"><h3>夥伴名錄</h3><input type="text" id="bpmFK" class="search-input" oninput="renderBPTbl()"></div><table id="bpTbl">
+    <thead>
+        <tr>
+            <th style="width:12%">編號</th>
+            <th>名稱</th>
+            <th style="width:10%">角色</th>
+            <th style="width:12%">聯絡人</th> <th style="width:15%">條件</th>
+            <th>備註</th>
+            <th style="width:12%">操作</th>
+        </tr>
+    </thead>
+    <tbody id="bpTbody"></tbody>
+</table></div>
+            </section>
+
+            <section id="itm-sec" class="tab-content hidden-section">
+                <div class="card">
+                    <h3 class="font-bold mb-6 text-gh-green">料號設定</h3>
+<form id="itmForm" class="space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-6 items-start">
+        <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">料號代碼</label>
+            <input type="text" id="mItmID" required placeholder="例如：P001" class="w-full mt-1">
+        </div>
+        
+        <div class="md:col-span-3">
+            <label class="block text-sm font-medium text-gray-700">品名</label>
+            <input type="text" id="mItmName" required placeholder="例如：箱裝蘋果" class="w-full mt-1">
+        </div>
+        
+        <div class="md:col-span-1">
+            <label class="block text-sm font-medium text-gray-700">基準單位</label>
+            <input type="text" id="mItmUnit" required placeholder="例如：個" class="w-full mt-1">
+        </div>
+    </div>
+
+    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+        <div class="flex flex-wrap items-center gap-3 text-gh-text">
+            <span class="font-bold">單位換算：</span>
+            <span>1</span>
+            <input type="text" id="mItmBUnit" placeholder="箱" class="w-28 !mt-0 !p-2 text-center border-b-2 border-gray-300 rounded-none focus:border-gh-blue focus:ring-0">
+            <span class="font-bold">=</span>
+            <input type="number" id="mItmRate" value="1" min="1" class="w-24 !mt-0 !p-2 text-center border-b-2 border-gray-300 rounded-none focus:border-gh-blue focus:ring-0">
+            <span class="font-medium">基準單位</span>
+            <span class="text-xs text-gray-500 ml-2">(例如：1箱 = 12個，基準單位填 "個"，換算填 "箱" 和 "12")</span>
+        </div>
+    </div>
+
+    <button type="submit" onclick="saveItm(event)" id="itmSubBtn" class="btn-orange">
+        <i class="fas fa-save mr-2"></i>儲存料號
+    </button>
+</form>
+                </div>
+                <div class="card overflow-hidden"><div class="flex justify-between items-center mb-6"><h3>料號清單</h3><input type="text" id="itmFK" class="search-input" oninput="renderITbl()"></div><table id="iTbl"><thead><tr><th>料號</th><th>品名規格</th><th>單位</th><th>換算</th><th>操作</th></tr></thead><tbody id="iTbody"></tbody></table></div>
+            </section>
+        </div>
+    </div>
 <script>
-    let db;
-    const request = indexedDB.open("ERP_V12_DB", 1);
+    const DB_KEY = 'MyERP_Final_v5';
+    let db = JSON.parse(localStorage.getItem(DB_KEY)) || { bp:[], items:[], inv:{}, sales:[], pur:[], exp:[] };
+    let tP=[], tS=[], clrT=null, editBIdx=null, editIIdx=null;
 
-    request.onsuccess = (e) => { db = e.target.result; init(); };
-    request.onupgradeneeded = (e) => {
-        db = e.target.result;
-        ["products", "purchases", "sales", "expenses"].forEach(s => {
-            if(!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: s === "products" ? "name" : "id", autoIncrement: s !== "products" });
-        });
-    };
-
-    function init() {
-        const today = new Date().toISOString().split('T')[0];
-        const m = today.substring(0, 7);
-        document.querySelectorAll('.default-date').forEach(el => el.value = today);
-        ['filterBuyMonth', 'filterSellMonth', 'filterExpMonth', 'stateMonth', 'profitMonth'].forEach(id => document.getElementById(id).value = m);
+    function saveDB() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+    function switchTab(id, btn) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden-section'));
+        const target = document.getElementById(id + '-sec');
+        if(target) target.classList.remove('hidden-section');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+        if(btn) btn.classList.add('tab-active');
         refreshUI();
     }
 
-    function openTab(evt, tabId) {
-        document.querySelectorAll(".tab-content, .tab").forEach(el => el.classList.remove("active"));
-        document.getElementById(tabId).classList.add("active");
-        evt.currentTarget.classList.add("active");
-        if(tabId === 'tab-profit') calculateProfit();
-        refreshUI();
+    // --- 到期日計算邏輯 ---
+    function upSD() {
+        const b = db.bp.find(x => x.name === document.getElementById('sCustSel').value);
+        const d = document.getElementById('sDate').value;
+        if(!b || !d) return;
+        let dt = new Date(d), res = new Date(dt);
+        if(b.type === 'monthly') {
+            res = new Date(dt.getFullYear(), dt.getMonth() + 1, 1); 
+            res.setDate(res.getDate() + (parseInt(b.days) || 0)); 
+        } else {
+            res.setDate(res.getDate() + (parseInt(b.days) || 0));
+        }
+        document.getElementById('sDue').innerText = res.toISOString().split('T')[0];
     }
 
-    function fmtInt(n) { return Math.round(n || 0).toLocaleString(); }
-    function fmtDec(n) { return (n || 0).toFixed(2); }
+    // --- 進貨存檔 (修正到期日存檔) ---
+    function saveP() {
+        const vendName = document.getElementById('pVendSel').value;
+        const d = document.getElementById('pDate').value;
+        if(!tP.length || !vendName) return alert('請填寫完整');
 
-    function getMonthlyStats(m) {
-        return new Promise(resolve => {
-            let income = 0, cogs = 0, exp = 0;
-            const tx = db.transaction(["sales", "expenses"], "readonly");
-            tx.objectStore("sales").getAll().onsuccess = (e) => {
-                e.target.result.forEach(s => { if(s.date.startsWith(m)) { income += s.qty * s.price; cogs += s.qty * (s.costAtSale || 0); }});
-                tx.objectStore("expenses").getAll().onsuccess = (e) => {
-                    e.target.result.forEach(x => { if(x.date.startsWith(m)) exp += x.amount; });
-                    resolve({ income, cogs, exp });
-                };
-            };
+        const b = db.bp.find(x => x.name === vendName);
+        let calcDueDate = d; 
+        if(b) {
+            let dt = new Date(d);
+            let res = new Date(dt);
+            if(b.type === 'monthly') {
+                res = new Date(dt.getFullYear(), dt.getMonth() + 1, 1);
+                res.setDate(res.getDate() + (parseInt(b.days) || 0));
+            } else {
+                res.setDate(res.getDate() + (parseInt(b.days) || 0));
+            }
+            calcDueDate = res.toISOString().split('T')[0];
+        }
+
+        tP.forEach(x => {
+        if (!db.inv[x.id]) db.inv[x.id] = { qty: 0, avgCost: 0, lastDate: '' };
+        const oQ = db.inv[x.id].qty;
+        const oC = db.inv[x.id].avgCost;
+        
+        // 更新平均成本：總成本 / 總基準數量
+        db.inv[x.id].avgCost = ((oQ * oC) + x.sub) / (oQ + x.baseQty);
+        // 更新庫存數量：增加基準數量
+        db.inv[x.id].qty += x.baseQty;
+        db.inv[x.id].lastDate = d;
+    });
+
+        db.pur.unshift({
+            id: 'P-' + Date.now(),
+            date: d,
+            dueDate: calcDueDate, 
+            vendor: vendName,
+            total: tP.reduce((a, b) => a + b.sub, 0),
+            isPaid: false,
+            memo: document.getElementById('pMemo').value,
+            items: [...tP]
+        });
+
+        tP = [];
+        document.getElementById('pTempArea').classList.add('hidden');
+        saveDB(); refreshUI();
+        alert('進貨成功🌱');
+    }
+function toggleAllD(tableId) {
+    const rows = document.querySelectorAll(`#${tableId} .detail-row`);
+    // 判斷目前是開還是關 (以第一筆為基準)
+    const isAnyHidden = Array.from(rows).some(r => r.style.display !== 'table-row');
+    
+    rows.forEach(r => {
+        r.style.display = isAnyHidden ? 'table-row' : 'none';
+    });
+}
+function exportToCSV(type) {
+    const data = db[type];
+    if (!data || data.length === 0) return alert('目前沒有資料可以匯出');
+
+    let csvContent = "\uFEFF"; // BOM
+    
+    // 根據類型決定表頭
+    if (type === 'exp') {
+        csvContent += "日期,類別,金額,備註\n";
+        data.forEach(x => {
+            const memo = (x.memo || '').replace(/,/g, ' ');
+            csvContent += `${x.date},${x.cat},${x.amount},${memo}\n`;
+        });
+    } else {
+        // ... 原本處理 pur 和 sales 的邏輯 ...
+        const partnerHeader = (type === 'pur') ? "供應商" : "客戶";
+        csvContent += `日期,${partnerHeader},總額,狀態,備註,細項\n`;
+        data.forEach(x => {
+            const partner = x.vendor || x.customer;
+            const status = x.isPaid ? '已結' : '待沖';
+            const memo = (x.memo || '').replace(/,/g, ' ');
+            const itemsStr = x.items.map(i => `${i.name}x${i.qty}${i.unitName||''}`).join('; ');
+            csvContent += `${x.date},${partner},${x.total},${status},${memo},${itemsStr}\n`;
         });
     }
 
-    function handlePurchase() {
-        const name = document.getElementById('buyName').value, qty = parseFloat(document.getElementById('buyQty').value), price = parseFloat(document.getElementById('buyPrice').value), date = document.getElementById('buyDate').value;
-        if(!name || isNaN(qty)) return;
-        const tx = db.transaction(["products", "purchases"], "readwrite");
-        tx.objectStore("products").get(name).onsuccess = (e) => {
-            let p = e.target.result || { name, qty: 0, avgCost: 0 };
-            p.avgCost = ((p.qty * p.avgCost) + (qty * price)) / (p.qty + qty);
-            p.qty += qty;
-            tx.objectStore("products").put(p);
-            tx.objectStore("purchases").add({ name, qty, price, date });
-            tx.oncomplete = () => { alert("進貨成功"); refreshUI(); };
-        };
+    // 下載邏輯 (與之前相同)
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `ERP_${type}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+}
+    // --- 銷售存檔 (修正到期日對應) ---
+    function saveS() {
+    if(!tS.length || !document.getElementById('sCustSel').value) return alert('請填寫完整');
+    const tc = tS.reduce((a, b) => a + b.costAtSale, 0);
+    const dueStr = document.getElementById('sDue').innerText.replace('到期日: ', '').trim();
+
+    // --- 關鍵修正：扣除庫存 ---
+    tS.forEach(x => {
+        if (db.inv[x.id]) {
+            db.inv[x.id].qty -= x.baseQty; // 這裡改用 baseQty
+        }
+    });
+
+    db.sales.unshift({
+        id: 'S-' + Date.now(),
+        date: document.getElementById('sDate').value,
+        customer: document.getElementById('sCustSel').value,
+        total: tS.reduce((a, b) => a + b.sub, 0),
+        totalCost: tc,
+        isPaid: false,
+        memo: document.getElementById('sMemo').value,
+        items: [...tS],
+        dueDate: (dueStr === "---") ? document.getElementById('sDate').value : dueStr
+    });
+
+    tS = [];
+    document.getElementById('sTempArea').classList.add('hidden');
+    saveDB(); 
+    refreshUI(); 
+    alert('過帳成功，庫存已精確扣除 ☀️');
+}
+
+    // --- 對帳渲染 (修正 AP 欄位對應) ---
+    function renderA() {
+        const hide = document.getElementById('accHP').checked, k = document.getElementById('accFK').value.toLowerCase();
+        let list = [
+            ...db.sales.map(x => ({ kind: 'AR', p: x.customer, date: x.date, dueDate: x.dueDate, total: x.total, isPaid: x.isPaid, id: x.id, paidDate: x.paidDate, clearMemo: x.clearMemo })),
+            ...db.pur.map(x => ({ kind: 'AP', p: x.vendor, date: x.date, dueDate: x.dueDate, total: x.total, isPaid: x.isPaid, id: x.id, paidDate: x.paidDate, clearMemo: x.clearMemo }))
+        ];
+
+        const f = list.filter(x => (!hide || !x.isPaid) && (!k || x.p.toLowerCase().includes(k)));
+        const tbody = document.getElementById('accTbody');
+        if(!tbody) return;
+
+        tbody.innerHTML = f.map(x => `
+            <tr class="border-b ${x.isPaid ? 'opacity-60 bg-gray-50' : 'cursor-pointer hover:bg-orange-50'}" onclick="opCl('${x.id}','${x.kind}')">
+                <td class="font-bold ${x.kind==='AR'?'text-blue-500':'text-rose-500'}">${x.kind}</td>
+                <td class="font-bold">${x.p}</td>
+                <td>${x.date}</td>
+                <td class="text-orange-600 font-bold">${x.dueDate || '-'}</td>
+                <td class="text-right font-black">$${x.total.toLocaleString()}</td>
+                <td class="text-center"><span class="${x.isPaid ? 'status-paid' : 'status-open'}">${x.isPaid ? '已結' : '待沖'}</span></td>
+                <td class="text-sm text-slate-500">${x.paidDate || '-'}</td>
+                <td class="text-xs text-slate-400 italic">${x.clearMemo || '-'}</td>
+            </tr>`).join('');
     }
 
-    function handleSale() {
-        const name = document.getElementById('sellSelect').value, qty = parseFloat(document.getElementById('sellQty').value), price = parseFloat(document.getElementById('sellPrice').value), cust = document.getElementById('custName').value, date = document.getElementById('sellDate').value;
-        const tx = db.transaction(["products", "sales"], "readwrite");
-        tx.objectStore("products").get(name).onsuccess = (e) => {
-            let p = e.target.result;
-            if(!p || p.qty < qty) return alert("庫存不足");
-            const costAtSale = p.avgCost;
-            p.qty -= qty;
-            tx.objectStore("products").put(p);
-            tx.objectStore("sales").add({ product: name, qty, price, costAtSale, customer: cust, date });
-            tx.oncomplete = () => { alert("銷售成功"); refreshUI(); };
-        };
-    }
-
-    function handleExpense() {
-        const amount = parseFloat(document.getElementById('expAmount').value);
-        const tx = db.transaction("expenses", "readwrite");
-        tx.objectStore("expenses").add({ date: document.getElementById('expDate').value, category: "一般支出", amount, memo: document.getElementById('expMemo').value });
-        tx.oncomplete = () => refreshUI();
-    }
-
-    async function calculateProfit() {
-        const m = document.getElementById('profitMonth').value;
-        const res = await getMonthlyStats(m);
-        document.getElementById('p-income').innerText = `$${fmtInt(res.income)}`;
-        document.getElementById('p-cost').innerText = `$${fmtInt(res.cogs)}`;
-        document.getElementById('p-exp').innerText = `$${fmtInt(res.exp)}`;
-        const net = res.income - res.cogs - res.exp;
-        document.getElementById('p-net').innerText = `$${fmtInt(net)}`;
-        document.getElementById('p-net').parentElement.style.backgroundColor = net >= 0 ? "#2196f3" : "#d32f2f";
+    // --- 其他共用函式 ---
+    function getNBP() {
+        if (db.bp.length === 0) return 'C00001';
+        const ids = db.bp.map(b => { const m = b.id.match(/\d+/); return m ? parseInt(m[0]) : 0; });
+        return 'C' + (Math.max(...ids) + 1).toString().padStart(5, '0');
     }
 
     function refreshUI() {
-        const tx = db.transaction(["products", "purchases", "sales", "expenses"], "readonly");
-        const invBody = document.querySelector("#inventoryTable tbody");
-        invBody.innerHTML = "";
-        tx.objectStore("products").getAll().onsuccess = (e) => {
-            e.target.result.forEach(p => {
-                invBody.innerHTML += `<tr><td>${p.name}</td><td>${p.qty}</td><td>$${fmtDec(p.avgCost)}</td><td>$${fmtInt(p.qty*p.avgCost)}</td></tr>`;
-            });
+    // 1. 取得羅盤專用的日期篩選值
+    const sD = document.getElementById('dashFS').value;
+    const eD = document.getElementById('dashFE').value;
+
+    // 2. 過濾銷售資料 (影響營收、銷貨成本)
+    const fSales = db.sales.filter(x => 
+        (!sD || x.date >= sD) && (!eD || x.date <= eD)
+    );
+    
+    // 3. 過濾支出資料 (影響支出費用)
+    const fExp = db.exp.filter(x => 
+        (!sD || x.date >= sD) && (!eD || x.date <= eD)
+    );
+
+    // 4. 執行計算 (定義所有必要的變數)
+    const rev = fSales.reduce((a, b) => a + b.total, 0); 
+    const cost = fSales.reduce((a, b) => a + (b.totalCost || 0), 0); // 修正這裡
+    const exSum = fExp.reduce((a, b) => a + b.amount, 0); // 修正這裡：定義 exSum
+    const oAR = db.sales.filter(s => !s.isPaid).reduce((a, b) => a + b.total, 0); // 待收帳款通常看全貌
+
+    // 5. 將結果渲染到 UI
+    document.getElementById('dashSales').innerText = `$ ${rev.toLocaleString()}`;
+    document.getElementById('dashCost').innerText = `$ ${cost.toLocaleString()}`;
+    document.getElementById('dashExp').innerText = `$ ${exSum.toLocaleString()}`;
+    
+    // 預估淨利 = 營收 - 成本 - 支出
+    const profit = rev - cost - exSum;
+    document.getElementById('dashProfit').innerText = `$ ${profit.toLocaleString()}`;
+    document.getElementById('dashOpenAR').innerText = `$ ${oAR.toLocaleString()}`;
+
+// 6. 處理下拉選單更新
+    const iO = '<option value="">--請選擇--</option>' + db.items.map(i => `<option value="${i.id}">${i.id}-${i.name} (存:${db.inv[i.id]?.qty||0})</option>`).join('');
+    
+// 取得進貨與銷售的產品下拉選單
+    const pItm = document.getElementById('pItemSel');
+    const sItm = document.getElementById('sItemSel');
+
+    // 統一填充選項並綁定連動
+    [pItm, sItm].forEach(itmSel => {
+        if (!itmSel) return;
+        itmSel.innerHTML = iO; // 填充產品選項 (iO 是您原本定義的產品列表)
+
+        // 綁定連動單位邏輯
+        itmSel.onchange = function() {
+            const isPur = this.id === 'pItemSel'; 
+            const targetUnitId = isPur ? 'pUnitSel' : 'sUnitSel';
+            const it = db.items.find(i => i.id === this.value);
+            const sel = document.getElementById(targetUnitId);
+            
+            if (it && sel) {
+                // 確保這裡抓到的是您在「料號設定」存入的欄位名稱 (unit 和 buyUnit)
+                sel.innerHTML = `<option value="1">${it.unit}</option>` + 
+                                (it.buyUnit ? `<option value="${it.rate}">${it.buyUnit}</option>` : '');
+            } else if (sel) {
+                sel.innerHTML = '<option value="">--</option>'; 
+            }
         };
-        updateTable(tx, "purchases", "#purchaseTable tbody", "filterBuyMonth");
-        updateTable(tx, "sales", "#salesHistoryTable tbody", "filterSellMonth");
-        updateTable(tx, "expenses", "#expenseTable tbody", "filterExpMonth");
-        const select = document.getElementById("sellSelect");
-        select.innerHTML = "";
-        tx.objectStore("products").getAll().onsuccess = (e) => {
-            e.target.result.forEach(p => select.innerHTML += `<option value="${p.name}">${p.name}</option>`);
-        };
-    }
+        
+        // 強制觸發一次變更事件，讓初始狀態也能顯示單位
+        itmSel.dispatchEvent(new Event('change'));
+    });
+    // 7. 處理供應商與客戶選單 (維持原樣)
+    document.getElementById('pVendSel').innerHTML = '<option value="">--供應商--</option>' + db.bp.filter(b=>b.role!=='Customer').map(b=>`<option value="${b.name}">${b.name}</option>`).join('');
+    document.getElementById('sCustSel').innerHTML = '<option value="">--客戶--</option>' + db.bp.filter(b=>b.role!=='Vendor').map(b=>`<option value="${b.name}">${b.name}</option>`).join('');
+    
+    if(editBIdx === null) document.getElementById('mBpID').value = getNBP();
 
-    function updateTable(tx, store, tbodyId, monthId) {
-        const body = document.querySelector(tbodyId);
-        const m = document.getElementById(monthId).value;
-        body.innerHTML = "";
-        tx.objectStore(store).getAll().onsuccess = (e) => {
-            e.target.result.reverse().forEach(d => {
-                if(d.date.startsWith(m)) {
-                    if(store === "purchases") body.innerHTML += `<tr><td>${d.date}</td><td>${d.name}</td><td>${d.qty}</td><td>$${fmtInt(d.price)}</td><td>$${fmtInt(d.qty*d.price)}</td><td><button class="btn-del" onclick="delData('${store}',${d.id})">刪除</button></td></tr>`;
-                    if(store === "sales") body.innerHTML += `<tr><td>${d.date}</td><td>${d.customer}</td><td>${d.product}</td><td>${d.qty}</td><td>$${fmtInt(d.price)}</td><td>$${fmtInt(d.qty*d.price)}</td><td><button class="btn-del" onclick="delData('${store}',${d.id})">刪除</button></td></tr>`;
-                    if(store === "expenses") body.innerHTML += `<tr><td>${d.date}</td><td>${d.category}</td><td>$${fmtInt(d.amount)}</td><td>${d.memo || ''}</td><td><button class="btn-del" onclick="delData('${store}',${d.id})">刪除</button></td></tr>`;
-                }
-            });
-        };
-    }
+    // 7. 觸發各分頁明細的重新渲染
+    renderP(); renderS(); renderA(); renderInv(); renderBPTbl(); renderITbl(); renderE();
 
-    function delData(store, id) {
-        if(!confirm("確定刪除？")) return;
-        db.transaction(store, "readwrite").objectStore(store).delete(id).onsuccess = () => refreshUI();
-    }
+}
 
-    function exportToExcel(tableId, name) {
-        const rows = document.getElementById(tableId).querySelectorAll("tr");
-        let csv = "\ufeff";
-        rows.forEach(r => {
-            let cols = Array.from(r.querySelectorAll("th, td")).map(c => c.innerText.replace(/,/g, ""));
-            if(cols.length > 4) cols.pop();
-            csv += cols.join(",") + "\n";
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-        a.download = `${name}.csv`;
-        a.click();
-    }
+function addP() {
+    const id = document.getElementById('pItemSel').value;
+    const q = parseFloat(document.getElementById('pQty').value);
+    const t = parseFloat(document.getElementById('pTotalIn').value);
+    
+    // --- 關鍵修正：即時取得選單中「選中項」的倍率 ---
+    const unitEl = document.getElementById('pUnitSel');
+    if (!unitEl || !unitEl.options[unitEl.selectedIndex]) return alert('請先選擇產品以載入單位');
+    
+    const rate = parseFloat(unitEl.value) || 1; // 基礎單位會是 1，換算單位會是 rate (如 12)
+    const uName = unitEl.options[unitEl.selectedIndex].text; // 取得顯示文字 (如 "個" 或 "箱")
 
-    async function exportFullSystem() {
-        const data = {};
-        for(let s of ["products", "purchases", "sales", "expenses"]) {
-            data[s] = await new Promise(res => db.transaction(s).objectStore(s).getAll().onsuccess = e => res(e.target.result));
+    if (!id || isNaN(q)) return alert('請選擇產品與數量');
+    
+    const it = db.items.find(i => i.id === id);
+    
+    // 計算實際要入庫的「基準總量」
+    // 如果選基礎單位(1)，就是 q * 1；如果選換算單位(12)，就是 q * 12
+    const baseQty = q * rate; 
+
+    tP.push({ 
+        id, 
+        name: it.name, 
+        qty: q,             // 畫面上看到的數字 (例如 1)
+        unitName: uName,    // 畫面上看到的單位 (例如 "箱")
+        baseQty: baseQty,   // 實際換算後的基準總量 (例如 12)
+        sub: t              // 該項總金額
+    });
+    
+    document.getElementById('pTempArea').classList.remove('hidden');
+    renderTempP();
+}
+    function renderTempP() {
+    document.getElementById('pTempTbody').innerHTML = tP.map((x, i) => `
+        <tr class="border-b">
+            <td class="py-2">${x.name}</td>
+            <td class="py-2">${x.qty} ${x.unitName} <span class="text-xs text-gray-400">(共 ${x.baseQty} 基準單位)</span></td>
+            <td class="py-2 text-right">$${x.sub.toLocaleString()}</td>
+            <td class="py-2 text-center text-red-500 cursor-pointer" onclick="tP.splice(${i}, 1); renderTempP()">✕</td>
+        </tr>`).join('');
+    
+    const total = tP.reduce((a, b) => a + b.sub, 0);
+    document.getElementById('pTotalDisp').innerText = `採購總計: $ ${total.toLocaleString()}`;
+}
+    function addS() {
+    const id = document.getElementById('sItemSel').value;
+    const q = parseFloat(document.getElementById('sQty').value);
+    const t = parseFloat(document.getElementById('sTotalIn').value);
+    
+    // --- 關鍵修正：取得單位倍率 ---
+    const unitEl = document.getElementById('sUnitSel');
+    if (!unitEl || !unitEl.options[unitEl.selectedIndex]) return alert('請先選擇產品');
+    
+    const rate = parseFloat(unitEl.value) || 1; 
+    const uName = unitEl.options[unitEl.selectedIndex].text;
+    const baseQty = q * rate; // 換算後的總數 (例如 1箱 x 12 = 12個)
+
+    const st = db.inv[id]?.qty || 0;
+    if(!id || isNaN(q)) return alert('請輸入完整資訊');
+    if(baseQty > st) return alert(`庫存不足！剩餘：${st} 基準單位`);
+
+    const it = db.items.find(i => i.id === id);
+    tS.push({ 
+        id, 
+        name: it.name, 
+        qty: q, 
+        unitName: uName, 
+        baseQty: baseQty, // 存入這個換算後的數字
+        sub: t, 
+        costAtSale: (db.inv[id].avgCost || 0) * baseQty 
+    });
+    
+    document.getElementById('sTempArea').classList.remove('hidden');
+    renderTempS();
+}
+    function renderTempS(){ document.getElementById('sTempTbody').innerHTML=tS.map((x,i)=>`<tr><td>${x.name}</td><td>${x.qty} ${x.unitName}</td><td class="text-right">$${x.sub.toLocaleString()}</td><td onclick="tS.splice(${i},1);renderTempS()" class="text-red-500 cursor-pointer">✕</td></tr>`).join(''); document.getElementById('sTotalDisp').innerText=`總計: $ ${tS.reduce((a,b)=>a+b.sub,0).toLocaleString()}`; }
+    
+    function delD(type, id) {
+        if(!confirm('確定刪除？')) return;
+        if(type === 'pur') {
+            const p = db.pur.find(x => x.id === id);
+            p.items.forEach(x => { if(db.inv[x.id]) db.inv[x.id].qty -= (x.baseQty); });
+            db.pur = db.pur.filter(x => x.id !== id);
+        } else if(type === 'sale') {
+            const s = db.sales.find(x => x.id === id);
+            s.items.forEach(x => { if(db.inv[x.id]) db.inv[x.id].qty += x.qty; });
+            db.sales = db.sales.filter(x => x.id !== id);
+        } else if(type === 'itm') {
+            db.items = db.items.filter(x => x.id !== id);
+            delete db.inv[id];
+        } else {
+            db[type] = db[type].filter(x => (x.id || x.name) !== id);
         }
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
-        a.download = `ERP_Backup_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
+        saveDB(); refreshUI();
+    }
+function renderITbl() {
+    const tbody = document.getElementById('iTbody');
+    if (!tbody) return;
+
+    const k = document.getElementById('itmFK').value.toLowerCase();
+    
+    // 篩選並生成 HTML
+    tbody.innerHTML = db.items.filter(it => 
+        !k || it.name.toLowerCase().includes(k) || it.id.toLowerCase().includes(k)
+    ).map((it, i) => {
+        // 找出原始索引以供修改使用
+        const realIdx = db.items.findIndex(x => x.id === it.id);
+        return `
+        <tr class="border-b">
+            <td>${it.id}</td>
+            <td class="font-bold">${it.name}</td>
+            <td>${it.unit}</td>
+            <td class="text-sm text-gray-500">1 ${it.buyUnit || '單位'} = ${it.rate} ${it.unit}</td>
+            <td>
+                <button onclick="editIRow(${realIdx})" class="text-blue-500 mr-2">改</button>
+                <button onclick="delD('itm','${it.id}')" class="text-red-400">刪</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+    function toggleD(id) { const el = document.getElementById('detail-' + id); if(el) el.style.display = (el.style.display === 'table-row') ? 'none' : 'table-row'; }
+function renderP() {
+    const s = document.getElementById('pFS').value;
+    const e = document.getElementById('pFE').value;
+    const k = document.getElementById('pFK').value.toLowerCase();
+    
+    // 增加篩選邏輯，確保搜尋與日期過濾正常運作
+    const data = db.pur.filter(x => 
+        (!s || x.date >= s) && 
+        (!e || x.date <= e) && 
+        (!k || x.vendor.toLowerCase().includes(k))
+    );
+
+    document.getElementById('pTbody').innerHTML = data.map(x => `
+        <tr class="border-b cursor-pointer hover:bg-emerald-50" onclick="toggleD('${x.id}')">
+            <td>${x.date}</td>
+            <td>${x.vendor}</td>
+            <td class="font-bold text-gh-green">$${x.total.toLocaleString()}</td>
+            <td><span class="${x.isPaid ? 'status-paid' : 'status-open'}">${x.isPaid ? '已結' : '待沖'}</span></td>
+            <td>
+                <input type="text" 
+                       class="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-gh-blue outline-none" 
+                       value="${x.memo || ''}" 
+                       onchange="upM('pur', '${x.id}', this.value)"
+                       onclick="event.stopPropagation()">
+            </td>
+            <td><button onclick="event.stopPropagation();delD('pur','${x.id}')" class="text-red-400">刪</button></td>
+        </tr>
+        <tr id="detail-${x.id}" class="detail-row">
+            <td colspan="6">
+                <div class="text-xs p-3 bg-white shadow-inner rounded-lg border border-emerald-50">
+                    ${x.items.map(i => `
+                        <span class="inline-block bg-emerald-50 px-2 py-1 rounded mr-2 mb-1">
+                            ${i.name} x ${i.qty} ${i.unitName || ''} <span class="text-gray-400">($${i.sub.toLocaleString()})</span>
+                        </span>
+                    `).join('')}
+                </div>
+            </td>
+        </tr>`).join('');
+}
+    function renderS() {
+    // 1. 取得篩選條件
+    const s = document.getElementById('sFS').value;
+    const e = document.getElementById('sFE').value;
+    const k = document.getElementById('sFK').value.toLowerCase();
+    
+    // 2. 執行篩選邏輯
+    const data = db.sales.filter(x => 
+        (!s || x.date >= s) && 
+        (!e || x.date <= e) && 
+        (!k || x.customer.toLowerCase().includes(k))
+    );
+
+    document.getElementById('sTbody').innerHTML = data.map(x => `
+        <tr class="border-b cursor-pointer hover:bg-blue-50" onclick="toggleD('${x.id}')">
+            <td>${x.date}</td>
+            <td>${x.customer}</td>
+            <td class="font-bold text-blue-600">$${x.total.toLocaleString()}</td>
+            <td><span class="${x.isPaid ? 'status-paid' : 'status-open'}">${x.isPaid ? '已結' : '待沖'}</span></td>
+            <td>
+                <input type="text" 
+                       class="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-gh-blue outline-none" 
+                       value="${x.memo || ''}" 
+                       onchange="upM('sales', '${x.id}', this.value)"
+                       onclick="event.stopPropagation()">
+            </td>
+            <td><button onclick="event.stopPropagation();delD('sale','${x.id}')" class="text-red-400">刪</button></td>
+        </tr>
+        <tr id="detail-${x.id}" class="detail-row">
+            <td colspan="6">
+                <div class="text-xs p-3 bg-white shadow-inner rounded-lg border border-blue-50">
+                    ${x.items.map(i => `
+                        <span class="inline-block bg-blue-50 text-blue-700 px-2 py-1 rounded mr-2 mb-1">
+                            <i class="fas fa-shopping-basket mr-1 opacity-50"></i>
+                            ${i.name} x ${i.qty} ${i.unitName || ''} 
+                            <span class="text-blue-400 ml-1">($${i.sub.toLocaleString()})</span>
+                        </span>
+                    `).join('')}
+                </div>
+            </td>
+        </tr>`).join('');
+}
+    function renderInv(){ document.getElementById('invTbody').innerHTML=db.items.map(it=>{const s=db.inv[it.id]||{qty:0,lastDate:'-'}; return `<tr class="border-b"><td>${it.id}</td><td class="font-bold">${it.name}</td><td class="text-right font-black text-blue-600">${s.qty}</td><td>${it.unit}</td><td class="text-center">${s.lastDate}</td></tr>`;}).join(''); }
+    function renderBPTbl() {
+    // 確保這裡抓到的 id 是您 HTML 搜尋框的 id (例如 bpmFK)
+    const searchField = document.getElementById('bpmFK');
+    const k = searchField ? searchField.value.toLowerCase() : "";
+    
+    const tbody = document.getElementById('bpTbody');
+    if(!tbody) return;
+
+    // 篩選邏輯：包含名稱、編號或聯絡人
+    tbody.innerHTML = db.bp.filter(b => 
+        !k || 
+        b.name.toLowerCase().includes(k) || 
+        b.id.toLowerCase().includes(k) || 
+        (b.contact && b.contact.toLowerCase().includes(k))
+    ).map((b, i) => {
+        // 取得該筆資料在原始陣列中的索引，以便「改/刪」功能正常運作
+        const realIdx = db.bp.findIndex(x => x.id === b.id);
+        
+        return `
+        <tr class="border-b">
+            <td>${b.id}</td>
+            <td class="font-bold">${b.name}</td>
+            <td>${b.role}</td>
+            <td>${b.contact || '-'}</td> <td>${b.type === 'monthly' ? '月結' : '交易後'}${b.days}天</td>
+            <td>${b.memo || '-'}</td>
+            <td>
+                <button onclick="editBPRow(${realIdx})" class="text-blue-500 mr-2">改</button>
+                <button onclick="delD('bpm','${b.id}')" class="text-red-400">刪</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+    function saveBP(e) {
+        e.preventDefault();
+        const d = { id: document.getElementById('mBpID').value, name: document.getElementById('mBpName').value, role: document.getElementById('mBpRole').value, type: document.getElementById('mBpType').value, days: parseInt(document.getElementById('mBpDays').value) || 0, contact: document.getElementById('mBpContact').value, memo: document.getElementById('mBpMemo').value };
+        if (editBIdx !== null) { db.bp[editBIdx] = d; editBIdx = null; } else { db.bp.push(d); }
+        saveDB(); document.getElementById('bpForm').reset(); refreshUI();
+    }
+    function saveItm(e) {
+    e.preventDefault(); // 防止網頁重整
+    
+    const id = document.getElementById('mItmID').value.trim();
+    const name = document.getElementById('mItmName').value.trim();
+    const unit = document.getElementById('mItmUnit').value.trim();
+    const bUnit = document.getElementById('mItmBUnit').value.trim();
+    const rate = parseFloat(document.getElementById('mItmRate').value) || 1;
+
+    if (!id || !name) return alert('請填寫料號與品名');
+
+    // 建立資料物件
+    const newItem = {
+        id: id,
+        name: name,
+        unit: unit,
+        buyUnit: bUnit,
+        rate: rate
+    };
+
+    if (editIIdx !== null) {
+        // 模式 A：修改現有料號
+        db.items[editIIdx] = newItem;
+        editIIdx = null;
+        document.getElementById('mItmID').readOnly = false;
+        document.getElementById('itmSubBtn').innerText = '儲存料號';
+    } else {
+        // 模式 B：新增料號 (需檢查重複)
+        if (db.items.some(i => i.id === id)) {
+            return alert('料號代碼已存在，請使用其他代碼');
+        }
+        db.items.push(newItem);
+        
+        // 同步初始化該料號的庫存空間
+        if (!db.inv[id]) {
+            db.inv[id] = { qty: 0, avgCost: 0, lastDate: '-' };
+        }
     }
 
-    function importFullSystem(e) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const data = JSON.parse(ev.target.result);
-            Object.keys(data).forEach(s => {
-                const tx = db.transaction(s, "readwrite");
-                tx.objectStore(s).clear();
-                data[s].forEach(v => tx.objectStore(s).add(v));
-            });
-            alert("匯入成功"); location.reload();
-        };
-        reader.readAsText(e.target.files[0]);
+    saveDB(); // 寫入 LocalStorage
+    document.getElementById('itmForm').reset(); // 清空表單
+    
+    // --- 關鍵步驟：強制更新介面 ---
+    refreshUI(); 
+    alert('料號儲存成功 🌱');
+}
+    function editBPRow(i){ editBIdx=i; const b=db.bp[i]; document.getElementById('mBpID').value=b.id; document.getElementById('mBpName').value=b.name; document.getElementById('mBpRole').value=b.role; document.getElementById('mBpType').value=b.type; document.getElementById('mBpDays').value=b.days; document.getElementById('mBpContact').value=b.contact||''; document.getElementById('mBpMemo').value=b.memo||''; window.scrollTo(0,0); }
+    function editIRow(i){ editIIdx=i; const it=db.items[i]; document.getElementById('mItmID').value=it.id; document.getElementById('mItmID').readOnly=true; document.getElementById('mItmName').value=it.name; document.getElementById('mItmUnit').value=it.unit; document.getElementById('mItmBUnit').value=it.buyUnit; document.getElementById('mItmRate').value=it.rate; window.scrollTo(0,0); }
+    function upM(type, id, newValue) {
+    // 根據傳入的類型（pur 或 sales）找到對應的資料表
+    const targetList = (type === 'pur') ? db.pur : db.sales;
+    
+    // 尋找該筆單據的索引
+    const idx = targetList.findIndex(x => x.id === id);
+    
+    if (idx > -1) {
+        // 更新備註內容
+        targetList[idx].memo = newValue;
+        
+        // 儲存至資料庫
+        saveDB();
+        
+        // 這裡不需要全頁 refreshUI，只需靜默儲存即可
+        console.log(`單據 ${id} 備註已更新為: ${newValue}`);
+    }
+}
+    function saveE(){ const d=document.getElementById('eDate').value,a=parseFloat(document.getElementById('eAmt').value); if(!d||isNaN(a))return; db.exp.unshift({id:'E-'+Date.now(),date:d,cat:document.getElementById('eCat').value,amount:a,memo:document.getElementById('eMemo').value}); saveDB(); refreshUI(); }
+    function renderE(){ document.getElementById('eTbody').innerHTML=db.exp.map(x=>`<tr class="border-b"><td>${x.date}</td><td>${x.cat}</td><td class="font-bold text-rose-500">$${x.amount.toLocaleString()}</td><td><input type="text" class="w-full bg-transparent" value="${x.memo||''}" onchange="upM('exp','${x.id}',this.value)"></td><td><button onclick="delD('exp','${x.id}')" class="text-red-400">刪</button></td></tr>`).join(''); }
+
+    function opCl(id,kind){ const list=(kind==='AR')?db.sales:db.pur; const it=list.find(x=>x.id===id); if(it.isPaid)return; clrT={id,kind}; document.getElementById('clrInf').innerText=`【沖銷】${kind} - ${it.customer||it.vendor} | $${it.total.toLocaleString()}`; document.getElementById('clrDate').valueAsDate=new Date(); document.getElementById('clrPnl').classList.remove('hidden'); }
+    function doClr() {
+        const { id, kind } = clrT;
+        const list = (kind === 'AR') ? db.sales : db.pur;
+        const idx = list.findIndex(x => x.id === id);
+        if (idx > -1) {
+            list[idx].isPaid = true;
+            list[idx].paidDate = document.getElementById('clrDate').value;
+            list[idx].clearMemo = document.getElementById('clrMemo').value;
+            saveDB(); document.getElementById('clrPnl').classList.add('hidden'); refreshUI();
+            alert('帳款沖銷完成！');
+        }
     }
 
-    function generateStatement() {
-        const m = document.getElementById('stateMonth').value, cst = document.getElementById('stateCust').value, comp = document.getElementById('myCompName').value || "您的公司";
-        let total = 0, html = `<h1 style="text-align:center">${comp}</h1><h2 style="text-align:center">銷售對帳單</h2><p>客戶名稱：${cst} | 對帳月份：${m}</p><table><thead><tr><th>日期</th><th>品項</th><th>數量</th><th>單價</th><th>小計</th></tr></thead><tbody>`;
-        db.transaction("sales").objectStore("sales").getAll().onsuccess = (e) => {
-            e.target.result.forEach(s => {
-                if(s.date.startsWith(m) && s.customer === cst) {
-                    html += `<tr><td>${s.date}</td><td>${s.product}</td><td>${s.qty}</td><td>$${fmtInt(s.price)}</td><td>$${fmtInt(s.qty*s.price)}</td></tr>`;
-                    total += s.qty * s.price;
-                }
-            });
-            html += `</tbody></table><h3 style="text-align:right">應收總計金額：NT$ ${fmtInt(total)}</h3>`;
-            html += `<div style="margin-top:40px; border-top:1px solid #000; padding-top:10px; font-weight:bold; color:#333;">💡 溫馨提醒：請於收到帳單後七日內完成匯款，感謝您的合作！</div>`;
-            document.getElementById('stContent').innerHTML = html;
-            document.getElementById('statementPrintSection').style.display = 'block';
-            window.scrollTo(0, document.body.scrollHeight);
-        };
-    }
+    function clearDashFilter() { document.getElementById('dashFS').value = ''; document.getElementById('dashFE').value = ''; refreshUI(); }
+    function exportData(){ const b=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`ERP_v5.json`; a.click(); }
+    function importData(e){ const r=new FileReader(); r.onload=x=>{db=JSON.parse(x.target.result);saveDB();location.reload();}; r.readAsText(e.target.files[0]); }
+    window.onload=()=>{['pDate','sDate','eDate'].forEach(id=>{ if(document.getElementById(id)) document.getElementById(id).value=new Date().toISOString().split('T')[0]; }); refreshUI();};
 </script>
 
-</body>
-</html>
