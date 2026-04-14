@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>裝潢帳務管理系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F3EE;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: rgba(0,0,0,0.08);
+  --border-md: rgba(0,0,0,0.14);
+  --text: #1A1A18;
+  --text-2: #6B6860;
+  --text-3: #A09C94;
+  --accent: #2A5C45;
+  --accent-light: #EAF2EC;
+  --accent-mid: #3D7A5E;
+  --amber: #C07A1A;
+  --amber-light: #FDF3E0;
+  --red: #B83232;
+  --red-light: #FDEAEA;
+  --blue: #1C4B8A;
+  --blue-light: #EBF0FA;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Layout ── */
+.shell { display: flex; min-height: 100vh; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--text);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+}
+.logo-icon svg { width: 20px; height: 20px; fill: white; }
+.logo-title { font-size: 15px; font-weight: 700; color: white; line-height: 1.2; }
+.logo-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+.sidebar-nav { padding: 12px 12px; flex: 1; }
+.nav-section-label {
+  font-size: 10px; font-weight: 500; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.3); padding: 10px 8px 6px; text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 400;
+  cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.nav-item.active { background: var(--accent); color: white; font-weight: 500; }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.8; }
+.nav-item.active svg { opacity: 1; }
+
+.sidebar-bottom {
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-badge {
+  background: rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 11px; color: rgba(255,255,255,0.35);
+}
+.sidebar-badge strong { color: rgba(255,255,255,0.6); display: block; font-size: 12px; margin-bottom: 2px; }
+
+/* ── Main Content ── */
+.main { margin-left: 220px; min-height: 100vh; }
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 600; color: var(--text); }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.content { padding: 28px; }
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Buttons ── */
+.btn {
+  height: 36px; padding: 0 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--border-md); background: var(--surface);
+  color: var(--text); font-family: inherit; transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--accent); color: white; border-color: transparent; }
+.btn-primary:hover { background: var(--accent-mid); }
+.btn-sm { height: 30px; padding: 0 12px; font-size: 12px; }
+.btn-xs { height: 26px; padding: 0 10px; font-size: 11px; }
+.btn-success { color: var(--accent); border-color: #97C459; background: var(--accent-light); }
+.btn-success:hover { background: #d5ecd5; }
+.btn-danger { color: var(--red); border-color: #F09595; background: var(--red-light); }
+.btn-danger:hover { background: #fad5d5; }
+.btn-ghost { border-color: transparent; background: transparent; color: var(--text-2); }
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+
+/* ── Metric Cards ── */
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  position: relative; overflow: hidden;
+}
+.metric-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--accent);
+}
+.metric-card.amber::before { background: var(--amber); }
+.metric-card.red::before { background: var(--red); }
+.metric-card.blue::before { background: var(--blue); }
+.metric-label { font-size: 11px; font-weight: 500; color: var(--text-3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; }
+.metric-val { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+.metric-val.green { color: var(--accent); }
+.metric-val.amber { color: var(--amber); }
+.metric-val.red { color: var(--red); }
+.metric-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+/* ── Tables ── */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600;
+  color: var(--text-3); letter-spacing: 0.04em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg); }
+tbody tr { cursor: default; }
+tbody tr.clickable:hover td { background: var(--surface2); cursor: pointer; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500;
+}
+.badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.badge-ongoing { background: var(--blue-light); color: var(--blue); }
+.badge-ongoing::before { background: var(--blue); }
+.badge-done { background: var(--accent-light); color: var(--accent); }
+.badge-done::before { background: var(--accent); }
+.badge-paused { background: var(--amber-light); color: var(--amber); }
+.badge-paused::before { background: var(--amber); }
+.badge-paid { background: var(--accent-light); color: var(--accent); font-size: 11px; padding: 2px 8px; }
+.badge-unpaid { background: var(--amber-light); color: var(--amber); font-size: 11px; padding: 2px 8px; }
+.badge-type { background: var(--surface2); color: var(--text-2); font-size: 11px; padding: 2px 8px; border-radius: 6px; }
+
+/* ── Progress Bar ── */
+.prog-wrap { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.4s ease; }
+.prog-fill.amber { background: var(--amber); }
+.prog-fill.red { background: var(--red); }
+
+/* ── Project Cards ── */
+.proj-grid { display: grid; gap: 14px; }
+.proj-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  cursor: pointer; transition: all 0.18s;
+}
+.proj-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-md); transform: translateY(-1px); }
+.proj-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.proj-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.proj-meta { font-size: 12px; color: var(--text-3); }
+.proj-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 12px; }
+.proj-stat { padding: 10px 12px; border-right: 1px solid var(--border); }
+.proj-stat:last-child { border-right: none; }
+.proj-stat-label { font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.proj-stat-val { font-size: 14px; font-weight: 600; }
+.proj-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.type-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 5px; background: var(--surface2); color: var(--text-2); font-weight: 400; }
+
+/* ── Sub Cards ── */
+.sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.sub-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); transition: all 0.15s; }
+.sub-card:hover { box-shadow: var(--shadow-md); }
+.sub-avatar { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.sub-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sub-name { font-size: 14px; font-weight: 600; }
+.sub-contact { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.sub-info-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); padding: 4px 0; border-bottom: 1px solid var(--border); }
+.sub-info-row:last-of-type { border-bottom: none; }
+.sub-actions { display: flex; gap: 6px; margin-top: 12px; }
+
+/* ── Payment Cards ── */
+.pay-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 14px; }
+.pay-stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+.pay-stage { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; transition: all 0.15s; }
+.pay-stage.paid { background: var(--accent-light); border-color: #97C459; }
+.pay-stage.pending { background: var(--amber-light); border-color: #EF9F27; }
+.pay-stage-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 6px; }
+.pay-stage.paid .pay-stage-label { color: var(--accent); }
+.pay-stage.pending .pay-stage-label { color: var(--amber); }
+.pay-stage-amt { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.pay-stage-date { font-size: 11px; color: var(--text-3); }
+.pay-stage-status { font-size: 11px; font-weight: 500; margin-top: 6px; }
+.pay-stage.paid .pay-stage-status { color: var(--accent); }
+.pay-stage.pending .pay-stage-status { color: var(--amber); }
+.pay-toggle-btn { width: 100%; height: 26px; border-radius: 5px; font-size: 11px; margin-top: 8px; cursor: pointer; border: 1px solid; font-family: inherit; font-weight: 500; transition: all 0.12s; }
+.pay-toggle-btn.to-paid { background: var(--accent-light); color: var(--accent); border-color: #97C459; }
+.pay-toggle-btn.to-paid:hover { background: #c5e5c5; }
+.pay-toggle-btn.to-unpaid { background: var(--red-light); color: var(--red); border-color: #F09595; }
+.pay-toggle-btn.to-unpaid:hover { background: #fac5c5; }
+
+/* ── Modal ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(20,20,18,0.55); z-index: 200;
+  align-items: flex-start; justify-content: center; padding: 40px 20px;
+  overflow-y: auto;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  width: 640px; max-width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  overflow: hidden; margin: auto;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close {
+  width: 30px; height: 30px; border: none; background: none; cursor: pointer;
+  border-radius: 8px; font-size: 20px; color: var(--text-3); line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: var(--surface2); color: var(--text); }
+.modal-body { padding: 22px 24px; max-height: 70vh; overflow-y: auto; }
+.modal-footer {
+  padding: 16px 24px; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px;
+  background: var(--bg);
+}
+
+/* ── Forms ── */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-row-1 { margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+.form-group input, .form-group select, .form-group textarea {
+  height: 36px; padding: 0 12px;
+  border: 1px solid var(--border-md); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text);
+  font-size: 13px; font-family: inherit; outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(42,92,69,0.1);
+}
+.form-group textarea { height: auto; padding: 8px 12px; resize: none; }
+.section-divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+.section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 10px; }
+
+/* ── Pay Stages Form ── */
+.pay-stages-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.pay-stage-form { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; background: var(--bg); }
+.pay-stage-form-label { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.pay-stage-form input { margin-bottom: 6px; }
+
+/* ── Materials Table in Form ── */
+.mat-table-wrap { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.mat-table-head { display: grid; grid-template-columns: 2.5fr 1fr 1fr 1.2fr 0.8fr; gap: 0; background: var(--bg); border-bottom: 1px solid var(--border); padding: 6px 10px; font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.mat-row { display: grid; grid-template-columns: 2.5fr 1fr 1fr 1.2fr 0.8fr; gap: 0; padding: 6px 10px; border-bottom: 1px solid var(--border); align-items: center; }
+.mat-row:last-child { border-bottom: none; }
+.mat-row input { height: 28px; font-size: 12px; padding: 0 8px; border: 1px solid var(--border-md); border-radius: 5px; background: var(--surface); color: var(--text); font-family: inherit; outline: none; width: calc(100% - 6px); }
+.mat-row input:focus { border-color: var(--accent); }
+.mat-subtotal { font-size: 12px; color: var(--text-2); padding-left: 4px; }
+
+/* ── Sub Assign in Form ── */
+.sub-assign-row { display: grid; grid-template-columns: 2fr 1.5fr 1.2fr 0.6fr; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); align-items: center; }
+.sub-assign-row:last-child { border-bottom: none; }
+.sub-assign-row select, .sub-assign-row input { height: 28px; font-size: 12px; padding: 0 8px; border: 1px solid var(--border-md); border-radius: 5px; background: var(--surface); color: var(--text); font-family: inherit; outline: none; width: 100%; }
+
+/* ── Summary Box ── */
+.summary-box { background: var(--bg); border-radius: var(--radius-sm); padding: 14px 16px; border: 1px solid var(--border); }
+.summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; color: var(--text-2); }
+.summary-row.total { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 8px; font-weight: 600; font-size: 14px; color: var(--text); }
+.summary-profit { font-size: 18px; font-weight: 700; }
+
+/* ── Detail sections ── */
+.detail-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.detail-stat { background: var(--bg); border-radius: var(--radius-sm); padding: 12px 14px; }
+.detail-stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-3); margin-bottom: 4px; }
+.detail-stat-val { font-size: 18px; font-weight: 700; }
+
+/* ── Report ── */
+.report-total td { background: var(--bg); font-weight: 600; border-top: 2px solid var(--border-md); }
+
+/* ── Empty State ── */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text-3); }
+.empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.3; }
+.empty-state p { font-size: 14px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--text); color: white;
+  padding: 12px 18px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  transform: translateY(80px); opacity: 0; transition: all 0.25s;
+  z-index: 999;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── Pay warn dot ── */
+.warn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+
+/* ── Page Headers ── */
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--text); }
+.page-subtitle { font-size: 13px; color: var(--text-3); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+    </div>
+    <div class="logo-title">裝潢帳務系統</div>
+    <div class="logo-sub">Interior Accounting</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">主要功能</div>
+    <button class="nav-item active" onclick="goto('dash',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      總覽儀表板
+    </button>
+    <button class="nav-item" onclick="goto('projects',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      案件管理
+    </button>
+    <button class="nav-item" onclick="goto('subs',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      工班管理
+    </button>
+    <button class="nav-item" onclick="goto('payment',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      付款追蹤
+    </button>
+    <button class="nav-item" onclick="goto('report',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      利潤報表
+    </button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="sidebar-badge">
+      <strong id="sb-proj-count">3 個案件</strong>
+      <span id="sb-total-profit">總利潤 $0</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">總覽儀表板</span>
+    <div class="topbar-actions">
+      <button class="btn btn-sm btn-ghost" onclick="openSubModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        新增工班
+      </button>
+      <button class="btn btn-sm btn-primary" onclick="openProjModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        新增案件
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── Dashboard ── -->
+    <div id="page-dash" class="page active">
+      <div class="page-header">
+        <div><div class="page-title">總覽</div><div class="page-subtitle" id="dash-date"></div></div>
+      </div>
+      <div class="metrics-grid" id="dash-metrics"></div>
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:600">近期案件</div>
+            <button class="btn btn-xs btn-ghost" onclick="goto('projects',document.querySelectorAll('.nav-item')[1])">查看全部</button>
+          </div>
+          <div id="dash-recent"></div>
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:14px">
+            <span class="warn-dot"></span>付款待收提醒
+          </div>
+          <div id="dash-pending"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Projects ── -->
+    <div id="page-projects" class="page">
+      <div class="page-header">
+        <div><div class="page-title">案件管理</div><div class="page-subtitle" id="proj-subtitle"></div></div>
+        <button class="btn btn-primary" onclick="openProjModal()">+ 新增案件</button>
+      </div>
+      <div class="proj-grid" id="proj-grid"></div>
+    </div>
+
+    <!-- ── Subs ── -->
+    <div id="page-subs" class="page">
+      <div class="page-header">
+        <div><div class="page-title">工班管理</div><div class="page-subtitle" id="sub-subtitle"></div></div>
+        <button class="btn btn-primary" onclick="openSubModal()">+ 新增工班</button>
+      </div>
+      <div class="sub-grid" id="sub-grid"></div>
+    </div>
+
+    <!-- ── Payment ── -->
+    <div id="page-payment" class="page">
+      <div class="page-header">
+        <div><div class="page-title">付款追蹤</div><div class="page-subtitle">業主收款與工班付款一覽</div></div>
+      </div>
+      <div id="pay-list"></div>
+    </div>
+
+    <!-- ── Report ── -->
+    <div id="page-report" class="page">
+      <div class="page-header">
+        <div><div class="page-title">利潤報表</div><div class="page-subtitle">所有案件成本結構與利潤分析</div></div>
+      </div>
+      <div class="card"><div class="tbl-wrap"><table id="report-table"></table></div></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ── Project Modal ── -->
+<div class="overlay" id="m-proj">
+<div class="modal">
+  <div class="modal-header">
+    <div class="modal-title" id="mp-title">新增案件</div>
+    <button class="modal-close" onclick="closeModal('m-proj')">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label>案件名稱</label><input type="text" id="f-name" placeholder="例：王宅全室翻新"></div>
+      <div class="form-group"><label>客戶姓名</label><input type="text" id="f-client" placeholder="姓名"></div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label>開工日期</label><input type="date" id="f-start"></div>
+      <div class="form-group"><label>完工日期</label><input type="date" id="f-end"></div>
+      <div class="form-group"><label>狀態</label>
+        <select id="f-status">
+          <option value="ongoing">施工中</option>
+          <option value="done">已完工</option>
+          <option value="paused">暫停</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-1">
+      <div class="form-group"><label>合約總金額（元）</label><input type="number" id="f-contract" placeholder="0" oninput="updateSummary()"></div>
+    </div>
+    <hr class="section-divider">
+    <div class="section-label">付款三階段設定</div>
+    <div class="pay-stages-form">
+      <div class="pay-stage-form">
+        <div class="pay-stage-form-label">訂金</div>
+        <div class="form-group" style="margin-bottom:6px"><input type="number" id="f-p1" placeholder="金額" oninput="updateSummary()"></div>
+        <div class="form-group"><input type="date" id="f-p1d"></div>
+      </div>
+      <div class="pay-stage-form">
+        <div class="pay-stage-form-label">工程款</div>
+        <div class="form-group" style="margin-bottom:6px"><input type="number" id="f-p2" placeholder="金額" oninput="updateSummary()"></div>
+        <div class="form-group"><input type="date" id="f-p2d"></div>
+      </div>
+      <div class="pay-stage-form">
+        <div class="pay-stage-form-label">尾款</div>
+        <div class="form-group" style="margin-bottom:6px"><input type="number" id="f-p3" placeholder="金額" oninput="updateSummary()"></div>
+        <div class="form-group"><input type="date" id="f-p3d"></div>
+      </div>
+    </div>
+    <div id="pay-hint" style="font-size:12px;color:var(--text-3);margin-bottom:10px"></div>
+    <hr class="section-divider">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-label" style="margin:0">材料費用明細</div>
+      <button class="btn btn-xs" onclick="addMat()">+ 新增材料</button>
+    </div>
+    <div id="mat-list-form"></div>
+    <hr class="section-divider">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-label" style="margin:0">工班指派</div>
+      <button class="btn btn-xs" onclick="addSubRow()">+ 指派工班</button>
+    </div>
+    <div id="sub-assign-form"></div>
+    <hr class="section-divider">
+    <div class="form-row">
+      <div class="form-group"><label>其他費用（元）</label><input type="number" id="f-other" placeholder="0" oninput="updateSummary()"></div>
+      <div class="form-group"><label>備註</label><input type="text" id="f-notes" placeholder="備忘事項"></div>
+    </div>
+    <div class="summary-box" id="modal-summary"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" onclick="closeModal('m-proj')">取消</button>
+    <button class="btn btn-primary" onclick="saveProj()">儲存案件</button>
+  </div>
+</div>
+</div>
+
+<!-- ── Sub Modal ── -->
+<div class="overlay" id="m-sub">
+<div class="modal" style="max-width:520px">
+  <div class="modal-header">
+    <div class="modal-title" id="ms-title">新增工班／分包商</div>
+    <button class="modal-close" onclick="closeModal('m-sub')">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label>工班名稱</label><input type="text" id="s-name" placeholder="例：王師傅泥作班"></div>
+      <div class="form-group"><label>負責人</label><input type="text" id="s-contact" placeholder="姓名"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>聯絡電話</label><input type="text" id="s-phone" placeholder="0912-000-000"></div>
+      <div class="form-group"><label>工班類型</label>
+        <select id="s-type">
+          <option>泥作</option><option>水電</option><option>木工</option><option>油漆</option>
+          <option>鐵工</option><option>地板</option><option>衛浴</option><option>廚具</option><option>空調</option><option>其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>計價方式</label>
+        <select id="s-rate-type"><option value="日薪">日薪</option><option value="坪數">坪數</option><option value="式">整批報價</option></select>
+      </div>
+      <div class="form-group"><label>參考報價（元）</label><input type="number" id="s-rate" placeholder="0"></div>
+    </div>
+    <div class="form-group"><label>備註 / 特殊技能</label><textarea id="s-notes" rows="2" placeholder="施工風格、擅長項目..."></textarea></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" onclick="closeModal('m-sub')">取消</button>
+    <button class="btn btn-primary" onclick="saveSub()">儲存工班</button>
+  </div>
+</div>
+</div>
+
+<!-- ── Detail Modal ── -->
+<div class="overlay" id="m-detail">
+<div class="modal">
+  <div class="modal-header">
+    <div class="modal-title" id="md-title">案件詳情</div>
+    <button class="modal-close" onclick="closeModal('m-detail')">×</button>
+  </div>
+  <div class="modal-body" id="md-body"></div>
+  <div class="modal-footer">
+    <button class="btn btn-danger btn-sm" id="md-del">刪除案件</button>
+    <div style="flex:1"></div>
+    <button class="btn" onclick="closeModal('m-detail')">關閉</button>
+    <button class="btn btn-primary" id="md-edit">編輯</button>
+  </div>
+</div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───
+let projects = [
+  { id:1, name:'林宅廚房翻新', client:'林先生', start:'2026-01-10', end:'2026-02-15', status:'done', contract:320000, other:8000, notes:'含廚具更換',
+    payments:{ deposit:{amt:96000,date:'2026-01-08',paid:true}, progress:{amt:128000,date:'2026-01-25',paid:true}, final:{amt:96000,date:'2026-02-15',paid:true} },
+    materials:[{name:'磁磚',unit:'才',qty:120,price:450},{name:'廚具',unit:'式',qty:1,price:85000},{name:'矽利康',unit:'式',qty:1,price:2000}],
+    subAssigns:[{subId:1,work:'泥作貼磚',cost:45000,paid:true},{subId:3,work:'廚具安裝',cost:15000,paid:true}] },
+  { id:2, name:'陳宅全室裝潢', client:'陳小姐', start:'2026-02-20', end:'2026-05-30', status:'ongoing', contract:880000, other:20000, notes:'三房兩廳',
+    payments:{ deposit:{amt:264000,date:'2026-02-18',paid:true}, progress:{amt:352000,date:'2026-04-01',paid:false}, final:{amt:264000,date:'2026-05-30',paid:false} },
+    materials:[{name:'木地板',unit:'坪',qty:45,price:3200},{name:'油漆',unit:'桶',qty:20,price:1800},{name:'燈具',unit:'式',qty:1,price:55000},{name:'衛浴設備',unit:'式',qty:2,price:38000}],
+    subAssigns:[{subId:2,work:'全室水電',cost:120000,paid:true},{subId:4,work:'木地板施工',cost:58000,paid:false},{subId:5,work:'油漆工程',cost:42000,paid:false}] },
+  { id:3, name:'張宅浴室改造', client:'張太太', start:'2026-03-01', end:'2026-03-20', status:'done', contract:150000, other:3000, notes:'',
+    payments:{ deposit:{amt:45000,date:'2026-02-28',paid:true}, progress:{amt:60000,date:'2026-03-10',paid:true}, final:{amt:45000,date:'2026-03-20',paid:false} },
+    materials:[{name:'馬賽克磁磚',unit:'才',qty:80,price:380},{name:'衛浴龍頭組',unit:'組',qty:1,price:18000}],
+    subAssigns:[{subId:1,work:'浴室泥作',cost:28000,paid:true},{subId:6,work:'衛浴安裝',cost:18000,paid:true}] }
+];
+
+let subs = [
+  {id:1,name:'王師傅泥作班',contact:'王建國',phone:'0912-345-678',type:'泥作',rateType:'坪數',rate:2800,notes:'擅長馬賽克、大理石'},
+  {id:2,name:'李電工行',contact:'李大明',phone:'0923-456-789',type:'水電',rateType:'式',rate:0,notes:'水電全包，含弱電'},
+  {id:3,name:'佳佳廚具安裝',contact:'陳佳佳',phone:'0934-567-890',type:'廚具',rateType:'式',rate:12000,notes:''},
+  {id:4,name:'億成木地板',contact:'張志成',phone:'0945-678-901',type:'地板',rateType:'坪數',rate:1200,notes:'特殊木紋處理'},
+  {id:5,name:'彩虹油漆工程',contact:'劉彩虹',phone:'0956-789-012',type:'油漆',rateType:'坪數',rate:350,notes:'環保塗料'},
+  {id:6,name:'順達衛浴',contact:'許順達',phone:'0967-890-123',type:'衛浴',rateType:'日薪',rate:3500,notes:''}
+];
+
+let editProjId = null, editSubId = null, matRows = [], subAssignRows = [], nextProjId = 4, nextSubId = 7;
+
+// ─── HELPERS ───
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('zh-TW');
+const matCost = p => (p.materials||[]).reduce((s,m)=>s+m.qty*m.price,0);
+const subCost = p => (p.subAssigns||[]).reduce((s,a)=>s+a.cost,0);
+const totalCost = p => matCost(p)+subCost(p)+(p.other||0);
+const profit = p => (p.contract||0)-totalCost(p);
+const profitRate = p => p.contract ? (profit(p)/p.contract*100) : 0;
+const paidAmt = p => Object.values(p.payments||{}).filter(x=>x.paid).reduce((s,x)=>s+x.amt,0);
+const payTotal = p => Object.values(p.payments||{}).reduce((s,x)=>s+x.amt,0);
+
+function rateColor(r){ return r>=20?'var(--accent)':r>=10?'var(--amber)':'var(--red)'; }
+function rateClass(r){ return r>=20?'green':r>=10?'amber':'red'; }
+function progClass(r){ return r>=20?'':r>=10?' amber':' red'; }
+
+function statusBadge(s){
+  const m={ongoing:['施工中','badge-ongoing'],done:['已完工','badge-done'],paused:['暫停','badge-paused']};
+  const [t,c]=m[s]||['未知',''];
+  return `<span class="badge ${c}">${t}</span>`;
+}
+
+const TYPE_COLORS = {泥作:'#C07A1A',水電:'#1C4B8A',木工:'#854F0B',油漆:'#3D7A5E',鐵工:'#5F5E5A',地板:'#3B6D11',衛浴:'#0F6E56',廚具:'#2A5C45',空調:'#993556',其他:'#888780'};
+function typeColor(t){ return TYPE_COLORS[t]||'#888'; }
+
+function toast(msg){
+  const el=$('toast'); el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+function goto(name, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  $('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  const titles={dash:'總覽儀表板',projects:'案件管理',subs:'工班管理',payment:'付款追蹤',report:'利潤報表'};
+  $('topbar-title').textContent=titles[name]||'';
+  renderAll();
+}
+
+function closeModal(id){ $(id).classList.remove('open'); }
+function openModal(id){ $(id).classList.add('open'); }
+
+// ─── RENDER ALL ───
+function renderAll(){
+  updateSidebar();
+  renderDash();
+  renderProjects();
+  renderSubs();
+  renderPayments();
+  renderReport();
+}
+
+function updateSidebar(){
+  $('sb-proj-count').textContent = projects.length + ' 個案件';
+  const tp = projects.reduce((s,p)=>s+profit(p),0);
+  $('sb-total-profit').textContent = '總利潤 $' + fmt(tp);
+}
+
+// ─── DASHBOARD ───
+function renderDash(){
+  const now = new Date();
+  $('dash-date').textContent = now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
+
+  const totalC = projects.reduce((s,p)=>s+p.contract,0);
+  const totalP = projects.reduce((s,p)=>s+profit(p),0);
+  const ongoing = projects.filter(p=>p.status==='ongoing').length;
+  const unpaid = projects.reduce((s,p)=>s+(payTotal(p)-paidAmt(p)),0);
+
+  $('dash-metrics').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">案件總金額</div>
+      <div class="metric-val">$${fmt(totalC)}</div>
+      <div class="metric-sub">共 ${projects.length} 個案件</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">總利潤</div>
+      <div class="metric-val ${totalP>=0?'green':'red'}">$${fmt(totalP)}</div>
+      <div class="metric-sub">平均利潤率 ${projects.length?(projects.reduce((s,p)=>s+profitRate(p),0)/projects.length).toFixed(1):0}%</div>
+    </div>
+    <div class="metric-card amber">
+      <div class="metric-label">施工中案件</div>
+      <div class="metric-val amber">${ongoing}</div>
+      <div class="metric-sub">共 ${projects.filter(p=>p.status==='done').length} 件已完工</div>
+    </div>
+    <div class="metric-card red">
+      <div class="metric-label">待收款項</div>
+      <div class="metric-val red">$${fmt(unpaid)}</div>
+      <div class="metric-sub">業主端待收</div>
+    </div>`;
+
+  const recent=[...projects].sort((a,b)=>b.id-a.id).slice(0,5);
+  $('dash-recent').innerHTML = recent.length ? `<table>
+    <thead><tr><th>案件</th><th>客戶</th><th>狀態</th><th>利潤率</th></tr></thead>
+    <tbody>${recent.map(p=>{
+      const r=profitRate(p);
+      return `<tr class="clickable" onclick="showDetail(${p.id})">
+        <td style="font-weight:600">${p.name}</td>
+        <td style="color:var(--text-2)">${p.client}</td>
+        <td>${statusBadge(p.status)}</td>
+        <td style="color:${rateColor(r)};font-weight:600">${r.toFixed(1)}%</td>
+      </tr>`;
+    }).join('')}</tbody></table>` : '<div class="empty-state"><p>尚無案件</p></div>';
+
+  const pending=[];
+  const labels={deposit:'訂金',progress:'工程款',final:'尾款'};
+  projects.forEach(p=>Object.entries(p.payments||{}).forEach(([k,v])=>{ if(!v.paid&&v.amt>0) pending.push({proj:p.name,label:labels[k],amt:v.amt,date:v.date}); }));
+  pending.sort((a,b)=>a.date<b.date?-1:1);
+  $('dash-pending').innerHTML = pending.length ? pending.slice(0,6).map(pp=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:600">${pp.proj}</div>
+        <div style="font-size:11px;color:var(--text-3)">${pp.label}　${pp.date||'未設日期'}</div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--red)">$${fmt(pp.amt)}</div>
+    </div>`).join('') : '<div class="empty-state" style="padding:20px"><p>無待收款項</p></div>';
+}
+
+// ─── PROJECTS ───
+function renderProjects(){
+  const el=$('proj-grid');
+  $('proj-subtitle').textContent = `共 ${projects.length} 個案件`;
+  if(!projects.length){ el.innerHTML='<div class="empty-state"><p>尚無案件，點選右上角新增</p></div>'; return; }
+  el.innerHTML=projects.map(p=>{
+    const mc=matCost(p),sc=subCost(p),tc=totalCost(p),pr=profit(p),r=profitRate(p);
+    const paid=paidAmt(p),total=payTotal(p),pct=total?Math.round(paid/total*100):0;
+    const subNames=(p.subAssigns||[]).map(a=>{const s=subs.find(x=>x.id===a.subId);return s?`<span class="type-tag">${s.type}</span>`:''}).join('');
+    return `<div class="proj-card" onclick="showDetail(${p.id})">
+      <div class="proj-card-header">
+        <div>
+          <div class="proj-name">${p.name}</div>
+          <div class="proj-meta">${p.client}　${p.start}${p.end?' → '+p.end:''}</div>
+        </div>
+        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          ${statusBadge(p.status)}
+          <span style="font-size:14px;font-weight:700;color:${rateColor(r)}">${r.toFixed(1)}%</span>
+        </div>
+      </div>
+      <div class="proj-stats">
+        <div class="proj-stat"><div class="proj-stat-label">合約金額</div><div class="proj-stat-val">$${fmt(p.contract)}</div></div>
+        <div class="proj-stat"><div class="proj-stat-label">材料費</div><div class="proj-stat-val">$${fmt(mc)}</div></div>
+        <div class="proj-stat"><div class="proj-stat-label">工班費</div><div class="proj-stat-val">$${fmt(sc)}</div></div>
+        <div class="proj-stat"><div class="proj-stat-label">利潤</div><div class="proj-stat-val" style="color:${rateColor(r)}">${pr>=0?'+':''}$${fmt(pr)}</div></div>
+        <div class="proj-stat"><div class="proj-stat-label">收款進度</div><div class="proj-stat-val" style="color:${pct>=100?'var(--accent)':pct>0?'var(--amber)':'var(--red)'}">${pct}%</div></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="prog-wrap"><div class="prog-fill${progClass(r)}" style="width:${Math.min(100,Math.max(0,r))}%"></div></div>
+      </div>
+      ${subNames?`<div class="proj-tags">${subNames}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ─── SUBS ───
+function renderSubs(){
+  const el=$('sub-grid');
+  $('sub-subtitle').textContent = `共 ${subs.length} 個工班`;
+  if(!subs.length){ el.innerHTML='<div class="empty-state"><p>尚無工班資料</p></div>'; return; }
+  el.innerHTML=subs.map(s=>{
+    const projs=projects.filter(p=>(p.subAssigns||[]).some(a=>a.subId===s.id));
+    const earned=projects.reduce((sum,p)=>{const a=(p.subAssigns||[]).find(x=>x.subId===s.id);return sum+(a?a.cost:0);},0);
+    const tc=typeColor(s.type);
+    const initials=s.name.slice(0,2);
+    return `<div class="sub-card">
+      <div class="sub-card-head">
+        <div class="sub-avatar" style="background:${tc}18;color:${tc}">${initials}</div>
+        <div><div class="sub-name">${s.name}</div><div class="sub-contact">${s.contact}　${s.phone}</div></div>
+      </div>
+      <div class="sub-info-row"><span style="color:var(--text-3)">工班類型</span><span class="badge-type">${s.type}</span></div>
+      <div class="sub-info-row"><span style="color:var(--text-3)">計價方式</span><span>${s.rateType}${s.rate?' / $'+fmt(s.rate):''}</span></div>
+      <div class="sub-info-row"><span style="color:var(--text-3)">承接案件</span><span style="font-weight:600">${projs.length} 件</span></div>
+      <div class="sub-info-row"><span style="color:var(--text-3)">累計費用</span><span style="font-weight:600;color:var(--accent)">$${fmt(earned)}</span></div>
+      ${s.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:8px;padding-top:6px;border-top:1px solid var(--border)">${s.notes}</div>`:''}
+      <div class="sub-actions">
+        <button class="btn btn-xs" onclick="event.stopPropagation();editSub(${s.id})">編輯</button>
+        <button class="btn btn-xs btn-danger" onclick="event.stopPropagation();if(confirm('確定刪除？')){subs=subs.filter(x=>x.id!==${s.id});renderAll();toast('已刪除工班');}">刪除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── PAYMENTS ───
+function renderPayments(){
+  const labels={deposit:'訂金',progress:'工程款',final:'尾款'};
+  $('pay-list').innerHTML=projects.map(p=>{
+    const paid=paidAmt(p),total=payTotal(p),pct=total?Math.round(paid/total*100):0;
+    const remaining=total-paid;
+    return `<div class="pay-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+        <div>
+          <div style="font-size:15px;font-weight:700">${p.name}</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:2px">${p.client}　${statusBadge(p.status)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:600">合約 $${fmt(p.contract)}</div>
+          <div style="font-size:12px;color:${remaining>0?'var(--red)':'var(--accent)'};margin-top:2px;font-weight:500">${remaining>0?'待收 $'+fmt(remaining):'已全數收款'}</div>
+        </div>
+      </div>
+      <div class="pay-stages">
+        ${Object.entries(p.payments||{}).map(([k,v])=>`
+          <div class="pay-stage ${v.paid?'paid':v.amt>0?'pending':''}">
+            <div class="pay-stage-label">${labels[k]}</div>
+            <div class="pay-stage-amt">$${fmt(v.amt)}</div>
+            <div class="pay-stage-date">${v.date||'未設日期'}</div>
+            <div class="pay-stage-status">${v.paid?'✓ 已收款':'⏳ 待收款'}</div>
+            <button class="pay-toggle-btn ${v.paid?'to-unpaid':'to-paid'}" onclick="togglePay(${p.id},'${k}')">${v.paid?'標為待收':'標為已收'}</button>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div class="prog-wrap" style="flex:1"><div class="prog-fill${pct<50?' red':pct<100?' amber':''}" style="width:${pct}%"></div></div>
+        <span style="font-size:12px;color:var(--text-3);white-space:nowrap">${pct}% 已收款</span>
+      </div>
+      ${(p.subAssigns||[]).length?`
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:8px">工班付款狀況</div>
+        <table style="font-size:12px">
+          <thead><tr><th>工班</th><th>工項</th><th>費用</th><th>狀態</th><th></th></tr></thead>
+          <tbody>${(p.subAssigns||[]).map((a,i)=>{const s=subs.find(x=>x.id===a.subId);
+            return `<tr><td style="font-weight:500">${s?s.name:'—'}</td><td style="color:var(--text-2)">${a.work}</td><td>$${fmt(a.cost)}</td>
+              <td><span class="badge ${a.paid?'badge-paid':'badge-unpaid'}">${a.paid?'已付款':'待付款'}</span></td>
+              <td><button class="btn btn-xs ${a.paid?'btn-danger':'btn-success'}" onclick="toggleSubPay(${p.id},${i})">${a.paid?'標待付':'標已付'}</button></td>
+            </tr>`}).join('')}</tbody>
+        </table>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ─── REPORT ───
+function renderReport(){
+  if(!projects.length){ $('report-table').innerHTML='<tr><td class="empty-state">尚無資料</td></tr>'; return; }
+  const sorted=[...projects].sort((a,b)=>profitRate(b)-profitRate(a));
+  $('report-table').innerHTML=`
+    <thead><tr>
+      <th>案件</th><th>合約金額</th><th>材料費</th><th>工班費</th><th>其他</th><th>總成本</th><th>利潤</th><th>利潤率</th><th>收款率</th>
+    </tr></thead>
+    <tbody>
+      ${sorted.map(p=>{
+        const mc=matCost(p),sc=subCost(p),tc=totalCost(p),pr=profit(p),r=profitRate(p);
+        const paid=paidAmt(p),total=payTotal(p),pct=total?Math.round(paid/total*100):0;
+        return `<tr>
+          <td><div style="font-weight:600">${p.name}</div><div style="font-size:11px;color:var(--text-3)">${p.client}</div></td>
+          <td>$${fmt(p.contract)}</td><td>$${fmt(mc)}</td><td>$${fmt(sc)}</td><td>$${fmt(p.other||0)}</td>
+          <td>$${fmt(tc)}</td>
+          <td style="font-weight:700;color:${rateColor(r)}">${pr>=0?'+':''}$${fmt(pr)}</td>
+          <td style="font-weight:700;color:${rateColor(r)}">${r.toFixed(1)}%</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="prog-wrap" style="width:60px"><div class="prog-fill${pct<100?' amber':''}" style="width:${pct}%"></div></div>
+              <span style="font-size:11px;color:var(--text-2)">${pct}%</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join('')}
+      <tr class="report-total">
+        <td style="font-weight:700">合計</td>
+        <td style="font-weight:700">$${fmt(projects.reduce((s,p)=>s+p.contract,0))}</td>
+        <td>$${fmt(projects.reduce((s,p)=>s+matCost(p),0))}</td>
+        <td>$${fmt(projects.reduce((s,p)=>s+subCost(p),0))}</td>
+        <td>$${fmt(projects.reduce((s,p)=>s+(p.other||0),0))}</td>
+        <td>$${fmt(projects.reduce((s,p)=>s+totalCost(p),0))}</td>
+        <td style="font-weight:700;color:var(--accent)">+$${fmt(projects.reduce((s,p)=>s+profit(p),0))}</td>
+        <td></td><td></td>
+      </tr>
+    </tbody>`;
+}
+
+// ─── TOGGLE PAYMENTS ───
+function togglePay(pid,key){
+  const p=projects.find(x=>x.id===pid); if(p&&p.payments[key]) p.payments[key].paid=!p.payments[key].paid;
+  renderAll(); toast(p.payments[key].paid?'已標記為已收款':'已標記為待收款');
+}
+function toggleSubPay(pid,idx){
+  const p=projects.find(x=>x.id===pid); if(p&&p.subAssigns[idx]) p.subAssigns[idx].paid=!p.subAssigns[idx].paid;
+  renderAll(); toast(p.subAssigns[idx].paid?'工班款已標為已付':'工班款已標為待付');
+}
+
+// ─── DETAIL MODAL ───
+function showDetail(id){
+  const p=projects.find(x=>x.id===id); if(!p) return;
+  const mc=matCost(p),sc=subCost(p),tc=totalCost(p),pr=profit(p),r=profitRate(p);
+  const paid=paidAmt(p),total=payTotal(p),pct=total?Math.round(paid/total*100):0;
+  const labels={deposit:'訂金',progress:'工程款',final:'尾款'};
+  $('md-title').textContent=p.name;
+  $('md-body').innerHTML=`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">${statusBadge(p.status)}<span style="font-size:12px;color:var(--text-3)">${p.client}　${p.start}${p.end?' → '+p.end:''}</span></div>
+    <div class="detail-stats">
+      <div class="detail-stat"><div class="detail-stat-label">合約金額</div><div class="detail-stat-val">$${fmt(p.contract)}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">利潤</div><div class="detail-stat-val" style="color:${rateColor(r)}">${pr>=0?'+':''}$${fmt(pr)}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">利潤率</div><div class="detail-stat-val" style="color:${rateColor(r)}">${r.toFixed(1)}%</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">收款率</div><div class="detail-stat-val" style="color:${pct>=100?'var(--accent)':pct>0?'var(--amber)':'var(--red)'}">${pct}%</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:8px">付款進度</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+      ${Object.entries(p.payments||{}).map(([k,v])=>`
+        <div class="pay-stage ${v.paid?'paid':v.amt>0?'pending':''}">
+          <div class="pay-stage-label">${labels[k]}</div>
+          <div class="pay-stage-amt">$${fmt(v.amt)}</div>
+          <div class="pay-stage-date">${v.date||'未設日期'}</div>
+          <div class="pay-stage-status">${v.paid?'✓ 已收款':'⏳ 待收款'}</div>
+        </div>`).join('')}
+    </div>
+    ${p.subAssigns&&p.subAssigns.length?`
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:8px">工班指派</div>
+      <table style="font-size:12px;margin-bottom:16px">
+        <thead><tr><th>工班</th><th>工項</th><th>費用</th><th>付款</th></tr></thead>
+        <tbody>${p.subAssigns.map(a=>{const s=subs.find(x=>x.id===a.subId);
+          return `<tr><td style="font-weight:500">${s?s.name:'—'}</td><td>${a.work}</td><td>$${fmt(a.cost)}</td><td><span class="badge ${a.paid?'badge-paid':'badge-unpaid'}">${a.paid?'已付':'待付'}</span></td></tr>`;}).join('')}
+        </tbody>
+      </table>`:''}
+    ${p.materials&&p.materials.length?`
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:8px">材料明細</div>
+      <table style="font-size:12px;margin-bottom:16px">
+        <thead><tr><th>材料</th><th>單位</th><th>數量</th><th>單價</th><th>小計</th></tr></thead>
+        <tbody>${p.materials.map(m=>`<tr><td>${m.name}</td><td>${m.unit}</td><td>${m.qty}</td><td>$${fmt(m.price)}</td><td style="font-weight:600">$${fmt(m.qty*m.price)}</td></tr>`).join('')}</tbody>
+      </table>`:''}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:13px;margin-bottom:8px">
+      <div style="background:var(--bg);border-radius:6px;padding:10px"><span style="font-size:11px;color:var(--text-3);display:block">材料費</span><span style="font-weight:600">$${fmt(mc)}</span></div>
+      <div style="background:var(--bg);border-radius:6px;padding:10px"><span style="font-size:11px;color:var(--text-3);display:block">工班費</span><span style="font-weight:600">$${fmt(sc)}</span></div>
+      <div style="background:var(--bg);border-radius:6px;padding:10px"><span style="font-size:11px;color:var(--text-3);display:block">其他費用</span><span style="font-weight:600">$${fmt(p.other||0)}</span></div>
+    </div>
+    ${p.notes?`<div style="font-size:13px;color:var(--text-2);background:var(--bg);border-radius:6px;padding:10px">備註：${p.notes}</div>`:''}`;
+  $('md-edit').onclick=()=>{closeModal('m-detail');editProj(id);};
+  $('md-del').onclick=()=>{if(confirm('確定刪除此案件？')){projects=projects.filter(x=>x.id!==id);closeModal('m-detail');renderAll();toast('案件已刪除');}};
+  openModal('m-detail');
+}
+
+// ─── PROJECT FORM ───
+function openProjModal(){
+  editProjId=null; matRows=[{name:'',unit:'式',qty:1,price:0}]; subAssignRows=[];
+  $('mp-title').textContent='新增案件';
+  ['f-name','f-client','f-notes'].forEach(id=>$(id).value='');
+  ['f-start','f-end'].forEach(id=>$(id).value='');
+  $('f-status').value='ongoing'; $('f-contract').value=''; $('f-other').value='';
+  ['f-p1','f-p2','f-p3','f-p1d','f-p2d','f-p3d'].forEach(id=>$(id).value='');
+  renderMatForm(); renderSubAssignForm(); updateSummary();
+  openModal('m-proj');
+}
+
+function addMat(){ matRows.push({name:'',unit:'式',qty:1,price:0}); renderMatForm(); updateSummary(); }
+
+function renderMatForm(){
+  const el=$('mat-list-form');
+  if(!matRows.length){ el.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:8px 0">尚無材料，點擊上方新增</div>'; return; }
+  el.innerHTML=`<div class="mat-table-wrap">
+    <div class="mat-table-head"><span>材料名稱</span><span>單位</span><span>數量</span><span>單價（元）</span><span>小計</span></div>
+    ${matRows.map((m,i)=>`<div class="mat-row">
+      <input type="text" value="${m.name}" oninput="matRows[${i}].name=this.value" placeholder="材料名稱">
+      <input type="text" value="${m.unit}" oninput="matRows[${i}].unit=this.value" style="width:calc(100% - 6px)">
+      <input type="number" value="${m.qty}" min="0" oninput="matRows[${i}].qty=+this.value;updateSummary()" style="width:calc(100% - 6px)">
+      <input type="number" value="${m.price}" min="0" oninput="matRows[${i}].price=+this.value;updateSummary()" style="width:calc(100% - 6px)">
+      <span class="mat-subtotal">$${fmt(m.qty*m.price)} <button onclick="matRows.splice(${i},1);renderMatForm();updateSummary()" style="border:none;background:none;cursor:pointer;color:var(--red);font-size:12px;padding:0 2px">✕</button></span>
+    </div>`).join('')}
+  </div>`;
+}
+
+function addSubRow(){
+  if(!subs.length){ alert('請先新增工班'); return; }
+  subAssignRows.push({subId:subs[0].id,work:'',cost:0,paid:false}); renderSubAssignForm(); updateSummary();
+}
+
+function renderSubAssignForm(){
+  const el=$('sub-assign-form');
+  if(!subAssignRows.length){ el.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:8px 0">尚未指派工班</div>'; return; }
+  el.innerHTML=subAssignRows.map((a,i)=>`<div class="sub-assign-row">
+    <select oninput="subAssignRows[${i}].subId=+this.value">${subs.map(s=>`<option value="${s.id}" ${s.id===a.subId?'selected':''}>${s.name}</option>`).join('')}</select>
+    <input type="text" value="${a.work}" oninput="subAssignRows[${i}].work=this.value" placeholder="工項說明">
+    <input type="number" value="${a.cost}" min="0" oninput="subAssignRows[${i}].cost=+this.value;updateSummary()" placeholder="費用">
+    <button class="btn btn-xs btn-danger" onclick="subAssignRows.splice(${i},1);renderSubAssignForm();updateSummary()">移除</button>
+  </div>`).join('');
+}
+
+function updateSummary(){
+  const contract=+($('f-contract').value)||0;
+  const p1=+($('f-p1').value)||0,p2=+($('f-p2').value)||0,p3=+($('f-p3').value)||0;
+  const paySum=p1+p2+p3, diff=contract-paySum;
+  $('pay-hint').innerHTML=paySum>0?`付款合計：$${fmt(paySum)}　<span style="color:${Math.abs(diff)<1?'var(--accent)':'var(--red)'}">${diff>0?'尚差 $'+fmt(diff):diff<0?'超出 $'+fmt(-diff):'與合約相符'}</span>`:'';
+
+  const mc=matRows.reduce((s,m)=>s+m.qty*m.price,0);
+  const sc=subAssignRows.reduce((s,a)=>s+a.cost,0);
+  const other=+($('f-other').value)||0;
+  const tc=mc+sc+other,pr=contract-tc,r=contract?(pr/contract*100):0;
+  $('modal-summary').innerHTML=`
+    <div class="summary-row"><span>材料費合計</span><span>$${fmt(mc)}</span></div>
+    <div class="summary-row"><span>工班費合計</span><span>$${fmt(sc)}</span></div>
+    <div class="summary-row"><span>其他費用</span><span>$${fmt(other)}</span></div>
+    <div class="summary-row total">
+      <span>總成本</span><span>$${fmt(tc)}</span>
+    </div>
+    <div class="summary-row total">
+      <span>預估利潤</span>
+      <span class="summary-profit" style="color:${rateColor(r)}">${pr>=0?'+':''}$${fmt(pr)} （${r.toFixed(1)}%）</span>
+    </div>`;
+}
+
+function saveProj(){
+  const name=$('f-name').value.trim();
+  if(!name){ alert('請填寫案件名稱'); return; }
+  const proj={
+    id:editProjId||nextProjId++, name, client:$('f-client').value.trim(),
+    start:$('f-start').value, end:$('f-end').value, status:$('f-status').value,
+    contract:+($('f-contract').value)||0, other:+($('f-other').value)||0,
+    notes:$('f-notes').value,
+    payments:{
+      deposit:{amt:+($('f-p1').value)||0,date:$('f-p1d').value,paid:false},
+      progress:{amt:+($('f-p2').value)||0,date:$('f-p2d').value,paid:false},
+      final:{amt:+($('f-p3').value)||0,date:$('f-p3d').value,paid:false}
+    },
+    materials:matRows.filter(m=>m.name),
+    subAssigns:subAssignRows.filter(a=>a.cost>0)
+  };
+  if(editProjId){ const i=projects.findIndex(p=>p.id===editProjId); if(i>=0) projects[i]=proj; }
+  else projects.unshift(proj);
+  closeModal('m-proj'); renderAll();
+  toast(editProjId?'案件已更新':'案件已新增');
+}
+
+function editProj(id){
+  const p=projects.find(x=>x.id===id); if(!p) return;
+  editProjId=id; matRows=p.materials.map(m=>({...m})); subAssignRows=(p.subAssigns||[]).map(a=>({...a}));
+  $('mp-title').textContent='編輯案件';
+  $('f-name').value=p.name; $('f-client').value=p.client;
+  $('f-start').value=p.start; $('f-end').value=p.end||'';
+  $('f-status').value=p.status; $('f-contract').value=p.contract; $('f-other').value=p.other||0;
+  $('f-notes').value=p.notes||'';
+  const pay=p.payments||{};
+  $('f-p1').value=(pay.deposit&&pay.deposit.amt)||0; $('f-p1d').value=(pay.deposit&&pay.deposit.date)||'';
+  $('f-p2').value=(pay.progress&&pay.progress.amt)||0; $('f-p2d').value=(pay.progress&&pay.progress.date)||'';
+  $('f-p3').value=(pay.final&&pay.final.amt)||0; $('f-p3d').value=(pay.final&&pay.final.date)||'';
+  renderMatForm(); renderSubAssignForm(); updateSummary();
+  openModal('m-proj');
+}
+
+// ─── SUB FORM ───
+function openSubModal(){
+  editSubId=null;
+  $('ms-title').textContent='新增工班／分包商';
+  ['s-name','s-contact','s-phone','s-notes'].forEach(id=>$(id).value='');
+  $('s-type').value='泥作'; $('s-rate-type').value='日薪'; $('s-rate').value='';
+  openModal('m-sub');
+}
+
+function saveSub(){
+  const name=$('s-name').value.trim();
+  if(!name){ alert('請填寫工班名稱'); return; }
+  const sub={id:editSubId||nextSubId++,name,contact:$('s-contact').value.trim(),phone:$('s-phone').value.trim(),
+    type:$('s-type').value,rateType:$('s-rate-type').value,rate:+($('s-rate').value)||0,notes:$('s-notes').value};
+  if(editSubId){ const i=subs.findIndex(s=>s.id===editSubId); if(i>=0) subs[i]=sub; }
+  else subs.push(sub);
+  closeModal('m-sub'); renderAll();
+  toast(editSubId?'工班資料已更新':'工班已新增');
+}
+
+function editSub(id){
+  const s=subs.find(x=>x.id===id); if(!s) return;
+  editSubId=id; $('ms-title').textContent='編輯工班';
+  $('s-name').value=s.name; $('s-contact').value=s.contact; $('s-phone').value=s.phone;
+  $('s-type').value=s.type; $('s-rate-type').value=s.rateType; $('s-rate').value=s.rate;
+  $('s-notes').value=s.notes||'';
+  openModal('m-sub');
+}
+
+// ─── INIT ───
+$('dash-date').textContent;
+renderAll();
+</script>
+</body>
+</html>
