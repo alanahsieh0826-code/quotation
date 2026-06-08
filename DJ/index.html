@@ -134,8 +134,24 @@
     <button class="btn-green" onclick="openContactModal()">📇 聯絡人名單</button>
     <button class="btn-gray" id="propBtn" onclick="toggleProposal()">📋 方案模式：關</button>
     <button class="btn-gray" id="bankBtn" onclick="toggleBank()">🏦 付款資訊：顯示</button>
+    <button class="btn-blue" onclick="saveQuotation()">💾 儲存此份報價單</button>
+    <button class="btn-green" onclick="openArchiveModal()">📂 已存報價單</button>
     <button class="btn-blue" onclick="window.print()">🖨️ 列印 / 存為 PDF</button>
     <button class="btn-warn" onclick="clearData()">🧹 清空重填</button>
+</div>
+
+<!-- 已存報價單 Modal -->
+<div class="modal-bg" id="archiveModal">
+    <div class="modal" style="width: 640px;">
+        <h3>已儲存的報價單</h3>
+        <table>
+            <thead><tr><th>編號</th><th>日期</th><th>客戶</th><th>專案</th><th style="text-align:right;">金額</th><th style="width:60px;"></th><th style="width:30px;"></th></tr></thead>
+            <tbody id="archiveList"></tbody>
+        </table>
+        <div class="btn-row">
+            <button class="btn-blue" onclick="closeModal('archiveModal')">關閉</button>
+        </div>
+    </div>
 </div>
 
 <!-- 客戶名單 Modal -->
@@ -374,6 +390,66 @@
         document.getElementById('payBody').innerHTML = '';
         data.payments.forEach(pay => addPayRow(pay.desc, pay.pct));
         return true;
+    }
+
+    // ====== 報價單存檔 ======
+    const ARCHIVE_KEY = 'quotation_archive_v1';
+
+    function saveQuotation() {
+        saveAllData();
+        const docNo = document.getElementById('doc_no').value.trim();
+        if (!docNo) { alert('請先填入報價單編號'); return; }
+        const archive = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '{}');
+        const isOverwrite = !!archive[docNo];
+        if (isOverwrite && !confirm(`編號 ${docNo} 已存在，是否覆蓋？`)) return;
+        archive[docNo] = {
+            data: localStorage.getItem('quotationData_v20'),
+            savedAt: new Date().toISOString(),
+            custName: document.getElementById('cust_name').value,
+            projName: document.getElementById('proj_name').value,
+            docDate: document.getElementById('doc_date').value,
+            total: document.getElementById('res-grand').innerText
+        };
+        localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archive));
+        alert(`報價單 ${docNo} 已${isOverwrite ? '更新' : '儲存'}`);
+    }
+
+    function openArchiveModal() { renderArchiveList(); document.getElementById('archiveModal').classList.add('show'); }
+
+    function renderArchiveList() {
+        const archive = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '{}');
+        const entries = Object.entries(archive).sort((a, b) => (b[1].savedAt || '').localeCompare(a[1].savedAt || ''));
+        const tbody = document.getElementById('archiveList');
+        if (entries.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px;">尚無已儲存的報價單</td></tr>';
+            return;
+        }
+        tbody.innerHTML = entries.map(([id, q]) => `
+            <tr>
+                <td>${id}</td>
+                <td>${q.docDate || ''}</td>
+                <td>${q.custName || ''}</td>
+                <td>${q.projName || ''}</td>
+                <td style="text-align:right;">${q.total || ''}</td>
+                <td><button class="btn-blue" style="padding:2px 6px;font-size:11px;" onclick="loadArchived('${id.replace(/'/g, "\\'")}')">載入</button></td>
+                <td><button class="btn-del" onclick="deleteArchived('${id.replace(/'/g, "\\'")}')">✕</button></td>
+            </tr>`).join('');
+    }
+
+    function loadArchived(id) {
+        const archive = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '{}');
+        const rec = archive[id];
+        if (!rec) return;
+        localStorage.setItem('quotationData_v20', rec.data);
+        location.reload();
+    }
+
+    function deleteArchived(id) {
+        if (!confirm(`確定刪除報價單 ${id}？`)) return;
+        const archive = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '{}');
+        delete archive[id];
+        localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archive));
+        renderArchiveList();
     }
 
     // ====== 客戶 / 聯絡人名單 ======
