@@ -15,7 +15,10 @@
 
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
         .brand-zone { border-left: 3.5px solid var(--blue-600); padding-left: 12px; }
-        .company-name { font-size: 18px; font-weight: 800; border: none; outline: none; width: 350px; background: transparent; }
+        .company-name-row { display: flex; align-items: center; gap: 4px; }
+        .company-stamp { width: 75px; height: 75px; object-fit: contain; mix-blend-mode: multiply; }
+        body.hide-stamp .company-stamp { display: none !important; }
+        .company-name { font-size: 18px; font-weight: 800; border: none; outline: none; width: 200px; background: transparent; flex: 0 0 auto; }
         .company-sub { font-size: 14px; color: var(--slate-500); margin-top: 5px; line-height: 1.5; }
         .company-sub input { border: none; outline: none; font-size: 14px; width: 250px; color: var(--slate-500); background: transparent; }
 
@@ -39,6 +42,7 @@
         .col-id { width: 30px; font-size: 14px; color: var(--slate-500); font-weight: 800; padding-top: 12px !important; }
         .col-desc { width: 55%; }
         .col-qty { width: 110px; text-align: center; padding-left: 4px !important; padding-right: 4px !important; }
+        .qty-header-input { width: 100%; border: none; outline: none; background: transparent; text-align: center; font-size: 14px; color: var(--slate-500); font-weight: 700; letter-spacing: 1px; font-family: inherit; }
         .qty-input::-webkit-inner-spin-button, .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .qty-input { -moz-appearance: textfield; }
         .col-price { width: 110px; text-align: center; }
@@ -73,6 +77,9 @@
             color: var(--slate-700); outline: none; line-height: 1.5; 
             resize: none; overflow: hidden; min-height: 2em; white-space: pre-wrap;
         }
+
+        /* 列印用鏡像 div，平常隱藏 */
+        .print-mirror { display: none; white-space: pre-wrap; font-size: 14px; line-height: 1.5; color: var(--slate-700); }
 
         /* 特別針對付款資訊區塊加大空間 */
         #bankInfo {
@@ -116,9 +123,19 @@
         .modal .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
 
         @media print {
+            @page {
+                margin: 12mm 12mm 18mm 12mm;
+                @bottom-center {
+                    content: "第 " counter(page) " / " counter(pages) " 頁";
+                    font-size: 10px;
+                    color: #64748b;
+                }
+            }
             .toolbar, .btn-del, .no-print { display: none !important; }
             body:not(.proposal-mode) .row-tool { display: none !important; }
             .quote-only-hide { display: none !important; }
+            .edit-area { display: none !important; }
+            .print-mirror { display: block !important; }
             body { background: white; padding: 0; }
             .a4-page { box-shadow: none; width: 100%; margin: 0; padding: 10px 40px; }
             .pay-pct-input { background: transparent !important; }
@@ -134,6 +151,7 @@
     <button class="btn-green" onclick="openContactModal()">📇 聯絡人名單</button>
     <button class="btn-gray" id="propBtn" onclick="toggleProposal()">📋 方案模式：關</button>
     <button class="btn-gray" id="bankBtn" onclick="toggleBank()">🏦 付款資訊：顯示</button>
+    <button class="btn-gray" id="stampBtn" onclick="toggleStamp()">🔖 公司印章：顯示</button>
     <button class="btn-blue" onclick="saveQuotation()">💾 儲存此份報價單</button>
     <button class="btn-green" onclick="openArchiveModal()">📂 已存報價單</button>
     <button class="btn-blue" onclick="window.print()">🖨️ 列印 / 存為 PDF</button>
@@ -190,7 +208,10 @@
 <div class="a4-page">
     <div class="header">
         <div class="brand-zone">
-            <input type="text" class="company-name save-field" id="my_co_name" value="迪加股份有限公司">
+            <div class="company-name-row">
+                <input type="text" class="company-name save-field" id="my_co_name" value="迪加股份有限公司">
+                <img src="stamp.png" alt="" class="company-stamp" onerror="this.style.display='none'">
+            </div>
             <div class="company-sub">
                 統一編號：<input type="text" class="save-field" id="my_co_tax" value="83100770"> <br>
                 聯絡人員：<input type="text" class="save-field" id="my_co_boss" value="楊文畬" list="contactNameList" onchange="onMyContactPick()"> <br>
@@ -226,7 +247,7 @@
             <tr>
                 <th class="col-id">#</th>
                 <th class="col-desc">項目描述 (DESCRIPTION)</th>
-                <th class="col-qty">數量</th>
+                <th class="col-qty"><input type="text" id="qty_label" class="save-field qty-header-input" value="人天"></th>
                 <th class="col-price">單價 (未稅)</th>
                 <th class="col-sum">小計</th>
                 <th style="width: 20px;" class="row-tool"></th>
@@ -253,15 +274,17 @@
 
         <div class="card">
             <div class="card-title">備註事項與細則</div>
-            <textarea id="memo" class="edit-area save-field" oninput="resize(this)" placeholder="輸入備註...">1. 本報價單有效期限為 30 天。
+            <textarea id="memo" class="edit-area save-field" oninput="resize(this);syncPrint('memo')" placeholder="輸入備註...">1. 本報價單有效期限為 30 天。
 2. 匯款手續費由由付款方負擔。</textarea>
+            <div class="print-mirror" id="memo_print"></div>
         </div>
 
         <div class="card bank-card">
             <div class="card-title">付款資訊 / 匯款帳號</div>
-            <textarea id="bankInfo" class="edit-area save-field" oninput="resize(this)" placeholder="銀行名稱、帳號、戶名...">銀行：(822)中國信託銀行 藝文分行
+            <textarea id="bankInfo" class="edit-area save-field" oninput="resize(this);syncPrint('bankInfo')" placeholder="銀行名稱、帳號、戶名...">銀行：(822)中國信託銀行 藝文分行
 戶名：迪加股份有限公司
 帳號：204540189038</textarea>
+            <div class="print-mirror" id="bankInfo_print"></div>
         </div>
 
         <div class="signature-zone">
@@ -281,6 +304,8 @@
             document.getElementById('doc_no').value = nextDocNo();
         }
         document.querySelectorAll('textarea').forEach(el => resize(el));
+        syncPrint('memo');
+        syncPrint('bankInfo');
         calc();
     }
 
@@ -301,6 +326,11 @@
     }
     function toNum(el) { el.value = el.value.replace(/,/g, ''); }
     function resize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+    function syncPrint(id) {
+        const src = document.getElementById(id);
+        const dst = document.getElementById(id + '_print');
+        if (src && dst) dst.textContent = src.value;
+    }
 
     // 新增報價項目
     function addRow(desc = "", qty = 1, price = 0, picked = false) {
@@ -569,6 +599,19 @@
         document.body.classList.add('hide-bank');
         window.addEventListener('DOMContentLoaded', () => {
             const b = document.getElementById('bankBtn'); if (b) b.innerText = '🏦 付款資訊：隱藏';
+        });
+    }
+
+    function toggleStamp() {
+        document.body.classList.toggle('hide-stamp');
+        const hidden = document.body.classList.contains('hide-stamp');
+        document.getElementById('stampBtn').innerText = '🔖 公司印章：' + (hidden ? '隱藏' : '顯示');
+        localStorage.setItem('hideStamp', hidden ? '1' : '0');
+    }
+    if (localStorage.getItem('hideStamp') === '1') {
+        document.body.classList.add('hide-stamp');
+        window.addEventListener('DOMContentLoaded', () => {
+            const b = document.getElementById('stampBtn'); if (b) b.innerText = '🔖 公司印章：隱藏';
         });
     }
     refreshDatalists();
